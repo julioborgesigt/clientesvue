@@ -40,16 +40,29 @@
     <DashboardStats :stats="clientStore.stats" @filter="handleFilter" class="my-4"/>
 
     <v-row class="my-4">
-      <v-col>
+
+      <v-col cols="12" md="6"> 
         <v-card class="pa-0" elevation="2">
            <v-card-title class="text-subtitle-1 ps-4 pt-3 pb-1">Previsão de Pagamentos</v-card-title>
            <v-card-text class="pa-2">
-             <ClientChart :chart-data="clientStore.chartData" style="height: 300px;" />
+             <ClientChart :chart-data="clientStore.chartData" style="height: 250px;" /> 
            </v-card-text>
         </v-card>
       </v-col>
-    </v-row>
 
+      <v-col cols="12" md="6"> 
+        <v-card class="pa-0" elevation="2">
+           <v-card-title class="text-subtitle-1 ps-4 pt-3 pb-1">Clientes por Serviço</v-card-title>
+           <v-card-text class="pa-2">
+             <ServiceDistributionChart 
+               :chart-data="clientStore.serviceDistributionData" 
+               style="height: 250px;" 
+             /> 
+           </v-card-text>
+        </v-card>
+      </v-col>
+
+    </v-row> 
     <v-row class="my-4">
       <v-col>
         <ClientTable @open-edit-modal="openEditModal" />
@@ -69,11 +82,14 @@
 import { onMounted, ref } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useTheme } from 'vuetify'; // <-- 5. IMPORTADO useTheme
+import { useTheme } from 'vuetify'; 
 
 // Importe os componentes
 import DashboardStats from '@/components/DashboardStats.vue';
 import ClientChart from '@/components/ClientChart.vue';
+// --- IMPORTADO O NOVO COMPONENTE ---
+import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue'; 
+// --- FIM DA IMPORTAÇÃO ---
 import ClientTable from '@/components/ClientTable.vue';
 import AppModal from '@/components/AppModal.vue';
 
@@ -99,13 +115,12 @@ const openEditModal = (client) => {
   handleOpenModal('editClient');
 };
 
-// --- 6. LÓGICA DO DARK MODE ADICIONADA ---
-const theme = useTheme(); // Inicializa o hook de tema
+// Lógica do Dark Mode 
+const theme = useTheme(); 
 const toggleTheme = () => {
   const newTheme = theme.global.current.value.dark ? 'light' : 'dark';
-  theme.global.name.value = newTheme; // A forma correta de MUDAR o tema globalmente
+  theme.global.name.value = newTheme; 
 };
-// --- FIM DA LÓGICA DO DARK MODE ---
 
 // Lógica de Logout
 const handleLogout = () => {
@@ -114,12 +129,13 @@ const handleLogout = () => {
   }
 };
 
-// Carregamento de dados
+// Carregamento de dados (MODIFICADO)
 onMounted(() => {
   clientStore.fetchClients();
   clientStore.fetchStats();
   clientStore.fetchChartData();
   clientStore.fetchServicos();
+  clientStore.fetchServiceDistribution(); // <-- CHAMADA A NOVA AÇÃO
 });
 
 // Funções de filtro

@@ -12,9 +12,9 @@
             contain 
           ></v-img>
         </div>
-        
+
         <v-card class="frosted-glass-card pa-4">
-          
+
           <v-card-title class="text-center text-h5 font-weight-medium pb-6">
             {{ cardTitle }} </v-card-title>
           
@@ -46,7 +46,7 @@
               </v-btn>
               
               <div class="text-center mb-4">
-                <a href="#" class="text-caption text-decoration-none text-blue">
+                <a href="#" class="text-caption text-decoration-none text-white">
                   Esqueceu a senha?
                 </a>
               </div>
@@ -131,7 +131,7 @@ const handleRegister = () => {
 /* 1. O Fundo da Página com Imagem */
 .login-background {
   /* Substitua pela URL da sua imagem de fundo */
-  background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); 
+  background-image: url('https://images.unsplash.com/photo-1520995075477-7fddc4fc8cd6?q=80&w=2074&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D) center/cover #004494; position: relative'); 
   background-size: cover;
   background-position: center center;
   position: relative; /* Necessário para o z-index do conteúdo */

@@ -29,7 +29,7 @@ const darkTheme = {
   colors: {
     background: '#121212', // Fundo principal escuro
     surface: '#1E1E1E',    // Fundo de cards/barras um pouco mais claro
-    primary: '#1d2427ff',    // <-- MUDANÇA: Azul acinzentado escuro para a cor primária no dark mode
+    primary: '#1E1E1E',    // <-- MUDANÇA: Azul acinzentado escuro para a cor primária no dark mode
     // secondary: '#...', 
   },
 }

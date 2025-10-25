@@ -15,6 +15,7 @@ export const useClientStore = defineStore('client', {
         totalClients: 0,
         isLoading: false,
         servicos: [],
+        serviceDistributionData: { labels: [], datasets: [] },
     }),
     
     // GETTERS: Dados computados
@@ -26,6 +27,32 @@ export const useClientStore = defineStore('client', {
     // ACTIONS: Suas funções fetch e de manipulação
     actions: {
         // Ação para buscar a lista de serviços da API
+
+        async fetchServiceDistribution() {
+          try {
+            const response = await apiClient.get('/clientes/stats/by-service');
+            const { labels, data } = response.data;
+
+            // Prepara a estrutura de dados para Chart.js Bar chart
+            // (As cores serão definidas dinamicamente no componente do gráfico)
+            this.serviceDistributionData = {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Clientes por Serviço',
+                  data: data,
+                  backgroundColor: [], // Será preenchido no componente
+                  borderColor: [],     // Será preenchido no componente
+                  borderWidth: 1
+                }
+              ]
+            };
+          } catch (error) {
+            console.error('Erro ao buscar distribuição por serviço:', error);
+            // Zera os dados em caso de erro para não mostrar gráfico antigo
+            this.serviceDistributionData = { labels: [], datasets: [] }; 
+          }
+        },
         async fetchServicos() {
           try {
             const response = await apiClient.get('/servicos');
