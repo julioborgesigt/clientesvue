@@ -16,75 +16,77 @@
           <v-form v-if="modalType === 'register' && form" @submit.prevent="handleRegisterSubmit">
             <v-row>
               <v-col cols="12">
-                <v-text-field label="Nome*" v-model="form.name" required></v-text-field>
+                <v-text-field label="Nome*" v-model="form.name" required density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Vencimento*" v-model="form.vencimento" type="date" required></v-text-field>
+                <v-text-field label="Vencimento*" v-model="form.vencimento" type="date" required density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Serviço" v-model="form.servico"></v-text-field>
+                <v-text-field label="Serviço" v-model="form.servico" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field label="WhatsApp (ex: 55...)" v-model="form.whatsapp" prepend-inner-icon="mdi-whatsapp" required></v-text-field>
+                <v-text-field label="WhatsApp (ex: 55...)" v-model="form.whatsapp" prepend-inner-icon="mdi-whatsapp" required density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Valor Cobrado (R$)" v-model.number="form.valor_cobrado" type="number" prefix="R$"></v-text-field>
+                <v-text-field label="Valor Cobrado (R$)" v-model.number="form.valor_cobrado" type="number" prefix="R$" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Custo (R$)" v-model.number="form.custo" type="number" prefix="R$"></v-text-field>
+                <v-text-field label="Custo (R$)" v-model.number="form.custo" type="number" prefix="R$" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-textarea label="Observações" v-model="form.observacoes" rows="2"></v-textarea>
+                <v-textarea label="Observações" v-model="form.observacoes" rows="2" density="compact"></v-textarea>
               </v-col>
             </v-row>
-            <v-btn type="submit" color="primary" block>Salvar Cliente</v-btn>
+            <v-btn type="submit" color="primary" block class="mt-2">Salvar Cliente</v-btn> 
           </v-form>
 
           <v-form v-else-if="modalType === 'editClient' && form" @submit.prevent="handleEditSubmit">
             <v-row>
               <v-col cols="12">
-                <v-text-field label="Nome*" v-model="form.name" required></v-text-field>
+                 <v-text-field label="Nome*" v-model="form.name" required density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Vencimento*" v-model="form.vencimento" type="date" required></v-text-field>
+                 <v-text-field label="Vencimento*" v-model="form.vencimento" type="date" required density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Serviço" v-model="form.servico"></v-text-field>
+                 <v-text-field label="Serviço" v-model="form.servico" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-text-field label="WhatsApp" v-model="form.whatsapp" prepend-inner-icon="mdi-whatsapp"></v-text-field>
+                 <v-text-field label="WhatsApp" v-model="form.whatsapp" prepend-inner-icon="mdi-whatsapp" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Valor (R$)" v-model.number="form.valor_cobrado" type="number" prefix="R$"></v-text-field>
+                 <v-text-field label="Valor (R$)" v-model.number="form.valor_cobrado" type="number" prefix="R$" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field label="Custo (R$)" v-model.number="form.custo" type="number" prefix="R$"></v-text-field>
+                 <v-text-field label="Custo (R$)" v-model.number="form.custo" type="number" prefix="R$" density="compact" class="mb-2"></v-text-field>
               </v-col>
               <v-col cols="12">
-                <v-textarea label="Observações" v-model="form.observacoes" rows="2"></v-textarea>
+                 <v-textarea label="Observações" v-model="form.observacoes" rows="2" density="compact"></v-textarea>
               </v-col>
             </v-row>
-            <v-btn type="submit" color="primary" block>Salvar Alterações</v-btn>
+            <v-btn type="submit" color="primary" block class="mt-2">Salvar Alterações</v-btn>
           </v-form>
 
           <v-form v-else-if="modalType === 'editMessage'" @submit.prevent="handleMessageSubmit('default')">
-            <v-textarea
+             <v-textarea
               label="Mensagem para clientes (a vencer)"
               v-model="messageForm.default"
               rows="5"
               auto-grow
+              density="compact" 
             ></v-textarea>
-            <v-btn type="submit" color="primary" block>Salvar Mensagem</v-btn>
+            <v-btn type="submit" color="primary" block class="mt-2">Salvar Mensagem</v-btn>
           </v-form>
 
           <v-form v-else-if="modalType === 'editVencidoMessage'" @submit.prevent="handleMessageSubmit('vencido')">
-            <v-textarea
+             <v-textarea
               label="Mensagem para clientes (VENCIDOS)"
               v-model="messageForm.vencido"
               rows="5"
               auto-grow
+              density="compact"
             ></v-textarea>
-            <v-btn type="submit" color="primary" block>Salvar Mensagem</v-btn>
+            <v-btn type="submit" color="primary" block class="mt-2">Salvar Mensagem</v-btn>
           </v-form>
 
         </v-container>
@@ -99,6 +101,7 @@
     </v-card>
   </v-dialog>
 </template>
+
 
 <script setup>
 import { ref, computed, watch } from 'vue';
