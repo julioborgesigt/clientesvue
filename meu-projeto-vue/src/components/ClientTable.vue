@@ -27,47 +27,58 @@
       :items="clientStore.clients"
       :loading="clientStore.isLoading"
       density="compact"
+      hover 
       @update:options="clientStore.handleTableUpdate"
     >
       <template v-slot:item.valor_cobrado="{ value }">
         R$ {{ value.toFixed(2) }}
       </template>
-      
       <template v-slot:item.custo="{ value }">
         R$ {{ value.toFixed(2) }}
       </template>
-      
       <template v-slot:item.status="{ value }">
         <v-chip :color="getStatusColor(value)" size="small">
           {{ value }}
         </v-chip>
       </template>
-
       <template v-slot:item.vencimento="{ value }">
         {{ formatDate(value) }}
       </template>
       
       <template v-slot:item.actions="{ item }">
-        <v-menu>
-          <template v-slot:activator="{ props }">
-            <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
-          </template>
-          <v-list density="compact">
-            <v-list-item title="Editar" @click="handleAction('edit', item)"></v-list-item>
-            <v-divider></v-divider>
-            <v-list-item title="+1 Mês" @click="handleDate('MONTH', 1, item.id)"></v-list-item>
-            <v-list-item title="-1 Mês" @click="handleDate('MONTH', -1, item.id)"></v-list-item>
-            <v-divider></v-divider>
-            <v-list-item title="WhatsApp" @click="handleAction('whatsapp', item)"></v-list-item>
-            <v-list-item title="WhatsApp (Vencido)" @click="handleAction('whatsapp-vencido', item)"></v-list-item>
-            <v-divider></v-divider>
-            <v-list-item title="Status: Não Pagou" @click="handleStatus('pending', item.id)"></v-list-item>
-            <v-list-item title="Status: Cobrança Feita" @click="handleStatus('paid', item.id)"></v-list-item>
-            <v-list-item title="Status: Pag. em Dias" @click="handleStatus('in-day', item.id)"></v-list-item>
-            <v-divider></v-divider>
-            <v-list-item title="Excluir" color="red" @click="handleDelete(item)"></v-list-item>
-          </v-list>
-        </v-menu>
+        <div class="d-flex justify-end align-center">
+          <v-icon 
+            size="small" 
+            class="me-1" 
+            @click="handleAction('edit', item)"
+            title="Editar Cliente"
+          >
+            mdi-pencil
+          </v-icon>
+          
+          <v-menu location="start">
+            <template v-slot:activator="{ props }">
+              <v-btn icon="mdi-dots-vertical" variant="text" size="small" v-bind="props"></v-btn>
+            </template>
+            <v-list density="compact">
+              <v-list-item title="+1 Mês" @click="handleDate('MONTH', 1, item.id)"></v-list-item>
+              <v-list-item title="-1 Mês" @click="handleDate('MONTH', -1, item.id)"></v-list-item>
+              <v-divider></v-divider>
+              <v-list-item title="WhatsApp" @click="handleAction('whatsapp', item)"></v-list-item>
+              <v-list-item title="WhatsApp (Vencido)" @click="handleAction('whatsapp-vencido', item)"></v-list-item>
+              <v-divider></v-divider>
+              <v-list-item title="Status: Não Pagou" @click="handleStatus('pending', item.id)"></v-list-item>
+              <v-list-item title="Status: Cobrança Feita" @click="handleStatus('paid', item.id)"></v-list-item>
+              <v-list-item title="Status: Pag. em Dias" @click="handleStatus('in-day', item.id)"></v-list-item>
+              <v-divider></v-divider>
+              <v-list-item title="Excluir" @click="handleDelete(item)">
+                 <template v-slot:prepend>
+                   <v-icon color="red">mdi-delete-outline</v-icon>
+                 </template>
+               </v-list-item>
+            </v-list>
+          </v-menu>
+        </div>
       </template>
 
     </v-data-table-server>
@@ -75,32 +86,20 @@
 </template>
 
 <script setup>
-// 1. Importe o 'watch'
+// O <script setup> não precisa de alterações
 import { ref, watch } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
-
-// 2. Removemos o defineProps, ele não é mais necessário
-// defineProps({ clients: Array }); 
-
 const clientStore = useClientStore();
 const emit = defineEmits(['open-edit-modal']);
-
 const search = ref('');
-const itemsPerPage = ref(10); // A tabela vai usar isso como padrão
-
-// 3. Adicione um "debounce" para a pesquisa
-// Isso evita chamar a API a cada tecla digitada
+const itemsPerPage = ref(10); 
 const searchDebounce = ref(null);
 watch(search, (newValue) => {
   clearTimeout(searchDebounce.value);
   searchDebounce.value = setTimeout(() => {
-    // Chama a ação 'setSearch' da store
     clientStore.setSearch(newValue);
-  }, 500); // Espera 500ms após o usuário parar de digitar
+  }, 500); 
 });
-
-
-// Definição das colunas da tabela
 const headers = [
   { title: 'ID', key: 'id', align: 'start' },
   { title: 'Nome', key: 'name' },
@@ -112,30 +111,50 @@ const headers = [
   { title: 'Status', key: 'status' },
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
 ];
-
-// --- Todas as suas funções de Ação e Formatação permanecem 100% iguais ---
 const handleStatus = (statusAction, clientId) => {
   clientStore.updateClientStatus(clientId, statusAction);
 };
-
 const handleDate = (unit, value, clientId) => {
   clientStore.adjustClientDate(clientId, value, unit);
 };
-
 const handleDelete = (client) => {
   if (confirm(`Excluir cliente ${client.name}?`)) {
     clientStore.deleteClient(client.id);
   }
 };
-
 const handleAction = (action, client) => {
   if (action === 'edit') {
     emit('open-edit-modal', client); 
   } else {
-    // (Lógica futura do whatsapp)
-    console.log('Ação:', action, client.name);
+    // Implementar lógica do WhatsApp aqui
+    console.log('Ação:', action, client.name); 
+    if (action === 'whatsapp' || action === 'whatsapp-vencido') {
+      const type = action === 'whatsapp-vencido' ? 'vencido' : 'default';
+      sendWhatsAppMessage(client, type); // Chamaremos uma nova função
+    }
   }
 };
+// NOVA FUNÇÃO para WhatsApp
+async function sendWhatsAppMessage(client, messageType = 'default') {
+  try {
+    const message = await clientStore.fetchMessage(messageType);
+    if (!message) {
+      alert(`Mensagem ${messageType === 'vencido' ? '(Vencido)' : 'Padrão'} não configurada.`);
+      return;
+    }
+    const vencimentoDate = new Date(client.vencimento);
+    vencimentoDate.setDate(vencimentoDate.getDate() + 1); // Adiciona 1 dia para exibição correta
+    const formattedDate = vencimentoDate.toLocaleDateString('pt-BR');
+    const fullMessage = `${message}\nVencimento: ${formattedDate}`;
+    // Remove o '+' inicial se houver e garante que começa com 55
+    const phone = client.whatsapp.startsWith('+') ? client.whatsapp.substring(1) : client.whatsapp; 
+    const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
+    window.open(whatsappLink, '_blank');
+  } catch (error) {
+    console.error('Erro ao enviar mensagem WhatsApp:', error);
+    alert('Erro ao preparar mensagem do WhatsApp.');
+  }
+}
 
 const getStatusColor = (status) => {
   if (status === 'Não pagou') return 'red-darken-1';
@@ -143,12 +162,10 @@ const getStatusColor = (status) => {
   if (status === 'Pag. em dias') return 'green-darken-1';
   return 'grey';
 };
-
-// A data vem como 'YYYY-MM-DD' do backend, então esta função está correta.
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
   const parts = dateString.split('-');
-  if (parts.length < 3) return dateString; // Segurança
+  if (parts.length < 3) return dateString;
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 </script>

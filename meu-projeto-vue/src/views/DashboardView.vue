@@ -1,9 +1,9 @@
 <template>
   <v-app-bar color="primary" density="compact">
     <v-app-bar-nav-icon @click="drawer = !drawer" class="d-md-none"></v-app-bar-nav-icon>
-    
+
     <v-toolbar-title>Dashboard de Clientes</v-toolbar-title>
-    
+
     <v-toolbar-items class="d-none d-md-block">
       <v-btn @click="handleOpenModal('register')">Cadastrar Cliente</v-btn>
       <v-btn @click="handleOpenModal('manageServices')">Gerenciar Serviços</v-btn>
@@ -12,7 +12,14 @@
     </v-toolbar-items>
 
     <v-spacer></v-spacer>
-    
+
+    <v-btn @click="toggleTheme" icon>
+      <v-icon>{{ theme.global.current.value.dark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}</v-icon>
+      <v-tooltip activator="parent" location="bottom">
+        {{ theme.global.current.value.dark ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro' }}
+      </v-tooltip>
+    </v-btn>
+
     <v-btn @click="handleLogout" icon>
       <v-icon>mdi-logout</v-icon>
       <v-tooltip activator="parent" location="bottom">Sair</v-tooltip>
@@ -20,37 +27,41 @@
   </v-app-bar>
 
   <v-navigation-drawer v-model="drawer" temporary>
-    <v-list>
-      <v-list-item @click="handleOpenModal('register')" title="Cadastrar Cliente"></v-list-item>
-      <v-list-item @click="handleOpenModal('manageServices')" title="Gerenciar Serviços"></v-list-item>
-      <v-list-item @click="handleOpenModal('editMessage')" title="Editar Msg. Padrão"></v-list-item>
-      <v-list-item @click="handleOpenModal('editVencidoMessage')" title="Editar Msg. Vencido"></v-list-item>
-    </v-list>
-  </v-navigation-drawer>
+     <v-list>
+       <v-list-item @click="handleOpenModal('register')" title="Cadastrar Cliente"></v-list-item>
+       <v-list-item @click="handleOpenModal('manageServices')" title="Gerenciar Serviços"></v-list-item>
+       <v-list-item @click="handleOpenModal('editMessage')" title="Editar Msg. Padrão"></v-list-item>
+       <v-list-item @click="handleOpenModal('editVencidoMessage')" title="Editar Msg. Vencido"></v-list-item>
+     </v-list>
+   </v-navigation-drawer>
 
-  <v-container fluid class="mt-4">
-    <DashboardStats :stats="clientStore.stats" @filter="handleFilter" />
+  <v-container fluid class="pa-4">
 
-    <v-row>
+    <DashboardStats :stats="clientStore.stats" @filter="handleFilter" class="my-4"/>
+
+    <v-row class="my-4">
       <v-col>
-        <v-card class="pa-4">
-          <ClientChart :chart-data="clientStore.chartData" style="height: 300px;" />
+        <v-card class="pa-0" elevation="2">
+           <v-card-title class="text-subtitle-1 ps-4 pt-3 pb-1">Previsão de Pagamentos</v-card-title>
+           <v-card-text class="pa-2">
+             <ClientChart :chart-data="clientStore.chartData" style="height: 300px;" />
+           </v-card-text>
         </v-card>
       </v-col>
     </v-row>
-    
-    <v-row>
+
+    <v-row class="my-4">
       <v-col>
         <ClientTable @open-edit-modal="openEditModal" />
       </v-col>
     </v-row>
   </v-container>
 
-  <AppModal 
-    :is-open="isModalOpen" 
-    :modal-type="currentModalType" 
+  <AppModal
+    :is-open="isModalOpen"
+    :modal-type="currentModalType"
     :client-data="clientToEdit"
-    @close="isModalOpen = false" 
+    @close="isModalOpen = false"
   />
 </template>
 
@@ -58,6 +69,7 @@
 import { onMounted, ref } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useTheme } from 'vuetify'; // <-- 5. IMPORTADO useTheme
 
 // Importe os componentes
 import DashboardStats from '@/components/DashboardStats.vue';
@@ -80,13 +92,20 @@ const handleOpenModal = (type) => {
   drawer.value = false;
 };
 
-// Lógica para o Modal de Edição (Seu código já estava correto aqui)
-const clientToEdit = ref(null); //
-
-const openEditModal = (client) => { //
-  clientToEdit.value = { ...client }; //
-  handleOpenModal('editClient');      //
+// Lógica para o Modal de Edição
+const clientToEdit = ref(null);
+const openEditModal = (client) => {
+  clientToEdit.value = { ...client };
+  handleOpenModal('editClient');
 };
+
+// --- 6. LÓGICA DO DARK MODE ADICIONADA ---
+const theme = useTheme(); // Inicializa o hook de tema
+const toggleTheme = () => {
+  const newTheme = theme.global.current.value.dark ? 'light' : 'dark';
+  theme.global.name.value = newTheme; // A forma correta de MUDAR o tema globalmente
+};
+// --- FIM DA LÓGICA DO DARK MODE ---
 
 // Lógica de Logout
 const handleLogout = () => {
