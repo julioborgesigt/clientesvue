@@ -14,6 +14,7 @@ export const useClientStore = defineStore('client', {
         searchQuery: '',
         totalClients: 0,
         isLoading: false,
+        servicos: [],
     }),
     
     // GETTERS: Dados computados
@@ -24,6 +25,34 @@ export const useClientStore = defineStore('client', {
 
     // ACTIONS: Suas funções fetch e de manipulação
     actions: {
+        // Ação para buscar a lista de serviços da API
+        async fetchServicos() {
+          try {
+            const response = await apiClient.get('/servicos');
+            // Armazena a lista no estado. O v-select precisa de { id, nome }
+            this.servicos = response.data; 
+          } catch (error) {
+            console.error('Erro ao buscar serviços:', error);
+            // Poderia adicionar tratamento de erro aqui (ex: mostrar notificação)
+          }
+        },
+
+        // Ação para adicionar um novo serviço (para o modal de gerenciamento)
+        async addServico(nomeServico) {
+          try {
+            const response = await apiClient.post('/servicos', { nome: nomeServico });
+            // Adiciona o novo serviço à lista local para não precisar buscar de novo
+            this.servicos.push({ id: response.data.id, nome: response.data.nome });
+            // Ordena a lista novamente
+            this.servicos.sort((a, b) => a.nome.localeCompare(b.nome)); 
+            alert('Serviço adicionado com sucesso!');
+            return true; // Indica sucesso
+          } catch (error) {
+            console.error('Erro ao adicionar serviço:', error);
+            alert(error.response?.data?.error || 'Erro ao adicionar serviço.');
+            return false; // Indica falha
+          }
+        },
         // Substitui fetchClients() e parte de updateData()
         async fetchClients() {
             this.isLoading = true;

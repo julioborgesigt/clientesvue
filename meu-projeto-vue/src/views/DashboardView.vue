@@ -6,6 +6,7 @@
     
     <v-toolbar-items class="d-none d-md-block">
       <v-btn @click="handleOpenModal('register')">Cadastrar Cliente</v-btn>
+      <v-btn @click="handleOpenModal('manageServices')">Gerenciar Serviços</v-btn> <v-btn @click="handleOpenModal('editMessage')">Msg. Padrão</v-btn>
       <v-btn @click="handleOpenModal('editMessage')">Msg. Padrão</v-btn>
       <v-btn @click="handleOpenModal('editVencidoMessage')">Msg. Vencido</v-btn>
     </v-toolbar-items>
@@ -21,6 +22,7 @@
   <v-navigation-drawer v-model="drawer" temporary>
     <v-list>
       <v-list-item @click="handleOpenModal('register')" title="Cadastrar Cliente"></v-list-item>
+      <v-list-item @click="handleOpenModal('manageServices')" title="Gerenciar Serviços"></v-list-item>
       <v-list-item @click="handleOpenModal('editMessage')" title="Editar Msg. Padrão"></v-list-item>
       <v-list-item @click="handleOpenModal('editVencidoMessage')" title="Editar Msg. Vencido"></v-list-item>
     </v-list>
@@ -98,6 +100,7 @@ onMounted(() => {
   clientStore.fetchClients();
   clientStore.fetchStats();
   clientStore.fetchChartData();
+  clientStore.fetchServicos();
 });
 
 // Funções de filtro
