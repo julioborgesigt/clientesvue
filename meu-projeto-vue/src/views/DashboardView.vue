@@ -6,7 +6,7 @@
     
     <v-toolbar-items class="d-none d-md-block">
       <v-btn @click="handleOpenModal('register')">Cadastrar Cliente</v-btn>
-      <v-btn @click="handleOpenModal('manageServices')">Gerenciar Serviços</v-btn> <v-btn @click="handleOpenModal('editMessage')">Msg. Padrão</v-btn>
+      <v-btn @click="handleOpenModal('manageServices')">Gerenciar Serviços</v-btn>
       <v-btn @click="handleOpenModal('editMessage')">Msg. Padrão</v-btn>
       <v-btn @click="handleOpenModal('editVencidoMessage')">Msg. Vencido</v-btn>
     </v-toolbar-items>

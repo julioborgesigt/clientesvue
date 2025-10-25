@@ -103,6 +103,7 @@
           </v-form>
 
           <div v-else-if="modalType === 'manageServices'">
+
             <h3 class="text-h6 mb-4">Adicionar Novo Serviço</h3>
             <v-form @submit.prevent="handleSaveService">
               <v-text-field
@@ -114,7 +115,6 @@
               ></v-text-field>
               <v-btn type="submit" color="primary" block>Salvar Novo Serviço</v-btn>
             </v-form>
-
             <v-divider class="my-6"></v-divider>
 
             <h3 class="text-h6 mb-2">Serviços Cadastrados</h3>
@@ -124,6 +124,16 @@
                 :key="servico.id"
                 :title="servico.nome"
               >
+                <template v-slot:append>
+                  <v-btn 
+                    icon="mdi-delete-outline" 
+                    variant="text" 
+                    size="small" 
+                    color="red-lighten-1"
+                    @click="confirmDeleteService(servico)"
+                    title="Excluir Serviço" 
+                  ></v-btn>
+                </template>
               </v-list-item>
                <v-list-item v-if="clientStore.servicos.length === 0">
                  Nenhum serviço cadastrado.
@@ -216,6 +226,12 @@ async function handleSaveService() { // <-- ADICIONADO: Função para salvar
   const success = await clientStore.addServico(newServiceName.value.trim()); 
   if (success) {
     newServiceName.value = ''; // Limpa o campo se deu certo
+  }
+}
+
+async function confirmDeleteService(servico) {
+  if (confirm(`Tem certeza que deseja excluir o serviço "${servico.nome}"?\n\n(Atenção: Clientes que usam este serviço não serão atualizados automaticamente.)`)) {
+    await clientStore.deleteServico(servico.id);
   }
 }
 // --- FIM DA LÓGICA PARA GERENCIAR SERVIÇOS ---

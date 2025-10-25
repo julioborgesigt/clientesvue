@@ -53,6 +53,24 @@ export const useClientStore = defineStore('client', {
             return false; // Indica falha
           }
         },
+
+        // --- NOVA AÇÃO DELETE ---
+        async deleteServico(serviceId) {
+          try {
+            await apiClient.delete(`/servicos/${serviceId}`);
+            // Remove o serviço da lista local para atualizar a UI imediatamente
+            this.servicos = this.servicos.filter(s => s.id !== serviceId);
+            alert('Serviço excluído com sucesso!');
+            // Opcional: Se um serviço excluído era o selecionado em algum formulário,
+            // você pode querer resetar esse campo aqui ou no componente.
+            return true; // Indica sucesso
+          } catch (error) {
+            console.error('Erro ao excluir serviço:', error);
+            alert(error.response?.data?.error || 'Erro ao excluir serviço.');
+            return false; // Indica falha
+          }
+        },
+
         // Substitui fetchClients() e parte de updateData()
         async fetchClients() {
             this.isLoading = true;
