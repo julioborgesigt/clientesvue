@@ -16,6 +16,8 @@ export const useClientStore = defineStore('client', {
         isLoading: false,
         servicos: [],
         serviceDistributionData: { labels: [], datasets: [] },
+        recentActions: [], // <-- 1. NOVO ESTADO PARA O LOG
+        isLoadingActions: false, // <-- 2. ESTADO DE LOADING PARA O LOG
     }),
     
     // GETTERS: Dados computados
@@ -27,6 +29,42 @@ export const useClientStore = defineStore('client', {
     // ACTIONS: Suas funções fetch e de manipulação
     actions: {
         // Ação para buscar a lista de serviços da API
+
+        // --- NOVA AÇÃO: Reverter ---
+        async revertAction(logId) {
+            try {
+                // Chama a nova API de reversão
+                const response = await apiClient.post(`/clientes/actions/${logId}/revert`);
+                alert(response.data.message || 'Ação revertida com sucesso!');
+
+                // Atualiza a lista de ações e a lista de clientes para refletir a reversão
+                await this.fetchRecentActions();
+                await this.fetchClients(); // Importante para ver o dado revertido na tabela
+                await this.fetchStats(); // Atualiza os cards também
+
+                return true; // Indica sucesso
+            } catch (error) {
+                console.error(`Erro ao reverter ação ID ${logId}:`, error);
+                alert(error.response?.data?.error || 'Erro ao reverter ação.');
+                // Atualiza o log mesmo em caso de erro (pode ter sido marcado como revertido)
+                await this.fetchRecentActions(); 
+                return false; // Indica falha
+            }
+        },
+        // --- FIM DA NOVA AÇÃO ---
+
+        async fetchRecentActions() {
+            this.isLoadingActions = true;
+            try {
+                const response = await apiClient.get('/clientes/actions/recent'); // Chama a nova rota
+                this.recentActions = response.data;
+            } catch (error) {
+                console.error('Erro ao buscar ações recentes:', error);
+                this.recentActions = []; // Limpa em caso de erro
+            } finally {
+                this.isLoadingActions = false;
+            }
+        },
 
         async fetchServiceDistribution() {
           try {
@@ -202,6 +240,7 @@ export const useClientStore = defineStore('client', {
                 await apiClient.put(`/clientes/mark-${statusAction}/${id}`);
                 this.fetchClients(); // Atualiza a tabela
                 this.fetchStats(); // Atualiza os cards
+                this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
                 console.error('Erro ao atualizar status:', error);
             }
@@ -214,6 +253,7 @@ export const useClientStore = defineStore('client', {
                 await apiClient.put(`/clientes/adjust-date/${id}`, { value, unit });
                 this.fetchClients(); 
                 this.fetchStats();
+                this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
                 console.error('Erro ao ajustar data:', error);
             }
@@ -226,6 +266,7 @@ export const useClientStore = defineStore('client', {
                 await apiClient.delete(`/clientes/delete/${id}`);
                 this.fetchClients();
                 this.fetchStats();
+                this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
                 console.error('Erro ao deletar cliente:', error);
             }
@@ -263,6 +304,7 @@ export const useClientStore = defineStore('client', {
             alert('Cliente adicionado com sucesso!');
             this.fetchClients();
             this.fetchStats();
+            this.fetchRecentActions(); // <-- Recarrega o log
           } catch (error) {
             console.error('Erro ao adicionar cliente:', error);
             alert('Erro ao adicionar cliente.');
@@ -297,6 +339,7 @@ export const useClientStore = defineStore('client', {
             await apiClient.put(`/clientes/update/${clientId}`, clientData);
             alert('Cliente atualizado com sucesso!');
             this.fetchClients(); // Atualiza a tabela
+            this.fetchRecentActions();
           } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
             alert('Erro ao atualizar cliente.');

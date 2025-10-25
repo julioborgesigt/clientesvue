@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore'; // (Criaremos este store no Passo 3)
 
 const apiClient = axios.create({
-    baseURL: 'https://clientes.domcloud.dev', // A URL do seu backend
+    baseURL: 'http://localhost:3000', // A URL do seu backend
     headers: {
         'Content-Type': 'application/json',
     },

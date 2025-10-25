@@ -67,6 +67,9 @@
       <v-col>
         <ClientTable @open-edit-modal="openEditModal" />
       </v-col>
+      <v-col cols="12" lg="4">
+        <RecentActions /> 
+      </v-col>
     </v-row>
   </v-container>
 
@@ -92,6 +95,7 @@ import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue'
 // --- FIM DA IMPORTAÇÃO ---
 import ClientTable from '@/components/ClientTable.vue';
 import AppModal from '@/components/AppModal.vue';
+import RecentActions from '@/components/RecentActions.vue'; // <-- IMPORTAR O NOVO COMPONENTE
 
 const clientStore = useClientStore();
 const authStore = useAuthStore();
@@ -136,6 +140,7 @@ onMounted(() => {
   clientStore.fetchChartData();
   clientStore.fetchServicos();
   clientStore.fetchServiceDistribution(); // <-- CHAMADA A NOVA AÇÃO
+  clientStore.fetchRecentActions(); // <-- CHAMAR A BUSCA DO LOG
 });
 
 // Funções de filtro
