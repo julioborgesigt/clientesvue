@@ -20,13 +20,14 @@
     
     <v-divider></v-divider>
 
-    <v-data-table
+    <v-data-table-server
       v-model:items-per-page="itemsPerPage"
       :headers="headers"
-      :items="clients"
-      :search="search"
-      :loading="clients.length === 0"
+      :items-length="clientStore.totalClients"
+      :items="clientStore.clients"
+      :loading="clientStore.isLoading"
       density="compact"
+      @update:options="clientStore.handleTableUpdate"
     >
       <template v-slot:item.valor_cobrado="{ value }">
         R$ {{ value.toFixed(2) }}
@@ -69,23 +70,34 @@
         </v-menu>
       </template>
 
-    </v-data-table>
+    </v-data-table-server>
   </v-card>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+// 1. Importe o 'watch'
+import { ref, watch } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
 
-defineProps({
-  clients: Array,
-});
-const clientStore = useClientStore();
+// 2. Removemos o defineProps, ele não é mais necessário
+// defineProps({ clients: Array }); 
 
-// --- Lógica do v-data-table ---
-const search = ref('');
-const itemsPerPage = ref(10); // Quantos itens por página
+const clientStore = useClientStore();
 const emit = defineEmits(['open-edit-modal']);
+
+const search = ref('');
+const itemsPerPage = ref(10); // A tabela vai usar isso como padrão
+
+// 3. Adicione um "debounce" para a pesquisa
+// Isso evita chamar a API a cada tecla digitada
+const searchDebounce = ref(null);
+watch(search, (newValue) => {
+  clearTimeout(searchDebounce.value);
+  searchDebounce.value = setTimeout(() => {
+    // Chama a ação 'setSearch' da store
+    clientStore.setSearch(newValue);
+  }, 500); // Espera 500ms após o usuário parar de digitar
+});
 
 
 // Definição das colunas da tabela
@@ -100,10 +112,8 @@ const headers = [
   { title: 'Status', key: 'status' },
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
 ];
-// --- Fim da lógica ---
 
-
-// --- Funções de Ação (agora chamam a store) ---
+// --- Todas as suas funções de Ação e Formatação permanecem 100% iguais ---
 const handleStatus = (statusAction, clientId) => {
   clientStore.updateClientStatus(clientId, statusAction);
 };
@@ -120,14 +130,13 @@ const handleDelete = (client) => {
 
 const handleAction = (action, client) => {
   if (action === 'edit') {
-    // EMITA O EVENTO PARA O COMPONENTE PAI (DashboardView)
     emit('open-edit-modal', client); 
   } else {
     // (Lógica futura do whatsapp)
     console.log('Ação:', action, client.name);
   }
 };
-// --- Funções de Formatação (Helpers) ---
+
 const getStatusColor = (status) => {
   if (status === 'Não pagou') return 'red-darken-1';
   if (status === 'cobrança feita') return 'orange-darken-1';
@@ -135,9 +144,11 @@ const getStatusColor = (status) => {
   return 'grey';
 };
 
+// A data vem como 'YYYY-MM-DD' do backend, então esta função está correta.
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-  const [year, month, day] = dateString.split('-');
-  return `${day}/${month}/${year}`;
+  const parts = dateString.split('-');
+  if (parts.length < 3) return dateString; // Segurança
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 </script>

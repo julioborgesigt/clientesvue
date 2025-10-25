@@ -13,6 +13,7 @@ export const useClientStore = defineStore('client', {
         statusFilter: 'vence3', // Filtro padrão
         searchQuery: '',
         totalClients: 0,
+        isLoading: false,
     }),
     
     // GETTERS: Dados computados
@@ -25,6 +26,7 @@ export const useClientStore = defineStore('client', {
     actions: {
         // Substitui fetchClients() e parte de updateData()
         async fetchClients() {
+            this.isLoading = true;
             try {
                 const params = {
                     page: this.currentPage,
@@ -48,8 +50,34 @@ export const useClientStore = defineStore('client', {
                 
             } catch (error) {
                 console.error('Erro ao buscar clientes:', error);
+            } finally {
+                this.isLoading = false; // <-- 3. ADICIONE ESTA LINHA (dentro de um finally)
             }
+            
         },
+
+            handleTableUpdate({ page, itemsPerPage, sortBy }) {
+            this.currentPage = page;
+            this.limit = itemsPerPage;
+            
+            // --- INÍCIO DA CORREÇÃO ---
+            // Quando Vuetify envia "All", itemsPerPage é -1.
+            // Interceptamos isso e substituímos pelo número total de clientes,
+            // que a store já conhece (this.totalClients).
+            if (this.limit === -1) {
+                // Usamos 99999 como um fallback seguro caso totalClients ainda seja 0.
+                this.limit = this.totalClients || 99999; 
+            }
+            // --- FIM DA CORREÇÃO ---
+
+            // (Lógica de Sort/Ordenação, se você quiser implementar no futuro)
+            // if (sortBy.length > 0) {
+            //   console.log("Ordenando por:", sortBy[0].key, sortBy[0].order);
+            // }
+
+            this.fetchClients();
+        },
+        
 
         // Substitui updateDashboardCounts()
         async fetchStats() {
@@ -203,7 +231,7 @@ export const useClientStore = defineStore('client', {
         
     }, // <-- FIM DO BLOCO 'actions'
     
-    // O ERRO ESTAVA AQUI: As funções abaixo estavam coladas aqui,
-    // fora do 'actions'. Elas foram removidas.
+    
+    
 
 });

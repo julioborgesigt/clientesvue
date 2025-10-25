@@ -39,10 +39,7 @@
     
     <v-row>
       <v-col>
-        <ClientTable 
-          :clients="clientStore.clients"
-          @open-edit-modal="openEditModal"
-        />
+        <ClientTable @open-edit-modal="openEditModal" />
       </v-col>
     </v-row>
   </v-container>
