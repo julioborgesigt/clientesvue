@@ -68,16 +68,17 @@
       </v-col>
 
     </v-row> 
+    
     <v-row class="my-4">
-      <v-col>
+      <v-col cols="12" lg="8"> 
         <ClientTable @open-edit-modal="openEditModal" />
       </v-col>
       <v-col cols="12" lg="4">
         <RecentActions /> 
       </v-col>
     </v-row>
+    
   </v-container>
-
 
   <PendingClientsModal 
     :is-open="isPendingModalOpen"
@@ -85,7 +86,14 @@
     :clients="clientStore.pendingThisMonthClients"
     @close="isPendingModalOpen = false"
   />
-</template>
+
+  <AppModal
+    :is-open="isModalOpen"
+    :modal-type="currentModalType"
+    :client-data="clientToEdit"
+    @close="isModalOpen = false"
+  />
+  </template>
 
 <script setup>
 import { onMounted, ref } from 'vue';
@@ -96,81 +104,67 @@ import { useTheme } from 'vuetify';
 // Importe os componentes
 import DashboardStats from '@/components/DashboardStats.vue';
 import ClientChart from '@/components/ClientChart.vue';
-// --- IMPORTADO O NOVO COMPONENTE ---
 import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue'; 
-// --- FIM DA IMPORTAÇÃO ---
 import ClientTable from '@/components/ClientTable.vue';
-import AppModal from '@/components/AppModal.vue';
-import RecentActions from '@/components/RecentActions.vue'; // <-- IMPORTAR O NOVO COMPONENTE
-// 3. IMPORTAR O NOVO MODAL
-import PendingClientsModal from '@/components/PendingClientsModal.vue';
+import AppModal from '@/components/AppModal.vue'; // <-- AppModal importado
+import RecentActions from '@/components/RecentActions.vue'; 
+import PendingClientsModal from '@/components/PendingClientsModal.vue'; // <-- PendingClientsModal importado
 
 
 const clientStore = useClientStore();
 const authStore = useAuthStore();
 
-// --- 4. ADICIONAR ESTADO E FUNÇÃO PARA O NOVO MODAL ---
+// Estado Modal Pendentes
 const isPendingModalOpen = ref(false);
-
 const openPendingModal = () => { 
-  // LOG 1: Função foi chamada?
   console.log('DashboardView: openPendingModal chamada.'); 
-  
-  // LOG 2: Estado ANTES da mudança
   console.log('DashboardView: isPendingModalOpen ANTES:', isPendingModalOpen.value); 
-  
-  // 1. ABRE o modal IMEDIATAMENTE
   isPendingModalOpen.value = true; 
-  
-  // LOG 3: Estado DEPOIS da mudança
   console.log('DashboardView: isPendingModalOpen DEPOIS:', isPendingModalOpen.value); 
-  
-  // 2. CHAMA a busca dos dados (não precisa esperar aqui)
   clientStore.fetchPendingThisMonthClients(); 
 };
-// --- FIM DA ADIÇÃO ---
 
-// Estado para o menu lateral
+// Estado Menu Lateral
 const drawer = ref(false);
 
-// Lógica do Modal
-const isModalOpen = ref(false);
+// Lógica Modal Principal (AppModal)
+const isModalOpen = ref(false); // Estado que controla o AppModal
 const currentModalType = ref('');
 const handleOpenModal = (type) => {
   currentModalType.value = type;
-  isModalOpen.value = true;
+  isModalOpen.value = true; // Define o estado para ABRIR o AppModal
   drawer.value = false;
 };
 
-// Lógica para o Modal de Edição
+// Lógica Modal Edição (usa o AppModal)
 const clientToEdit = ref(null);
 const openEditModal = (client) => {
   clientToEdit.value = { ...client };
-  handleOpenModal('editClient');
+  handleOpenModal('editClient'); // Chama a função que abre o AppModal
 };
 
-// Lógica do Dark Mode 
+// Lógica Dark Mode 
 const theme = useTheme(); 
 const toggleTheme = () => {
   const newTheme = theme.global.current.value.dark ? 'light' : 'dark';
   theme.global.name.value = newTheme; 
 };
 
-// Lógica de Logout
+// Lógica Logout
 const handleLogout = () => {
   if (confirm('Deseja realmente sair?')) {
     authStore.logout();
   }
 };
 
-// Carregamento de dados (MODIFICADO)
+// Carregamento de dados
 onMounted(() => {
   clientStore.fetchClients();
   clientStore.fetchStats();
   clientStore.fetchChartData();
   clientStore.fetchServicos();
-  clientStore.fetchServiceDistribution(); // <-- CHAMADA A NOVA AÇÃO
-  clientStore.fetchRecentActions(); // <-- CHAMAR A BUSCA DO LOG
+  clientStore.fetchServiceDistribution(); 
+  clientStore.fetchRecentActions(); 
 });
 
 // Funções de filtro
