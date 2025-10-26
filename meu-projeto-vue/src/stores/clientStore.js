@@ -1,6 +1,8 @@
 // src/stores/clientStore.js
 import { defineStore } from 'pinia';
 import apiClient from '@/api/axios';
+import { useNotificationStore } from './notificationStore';
+
 
 export const useClientStore = defineStore('client', {
     // STATE: Suas variáveis globais
@@ -59,10 +61,11 @@ export const useClientStore = defineStore('client', {
 
         // --- NOVA AÇÃO: Reverter ---
         async revertAction(logId) {
+          const notificationStore = useNotificationStore();
             try {
                 // Chama a nova API de reversão
                 const response = await apiClient.post(`/clientes/actions/${logId}/revert`);
-                alert(response.data.message || 'Ação revertida com sucesso!');
+                notificationStore.success(response.data.message || 'Ação revertida com sucesso!');
 
                 // Atualiza a lista de ações e a lista de clientes para refletir a reversão
                 await this.fetchRecentActions();
@@ -72,7 +75,7 @@ export const useClientStore = defineStore('client', {
                 return true; // Indica sucesso
             } catch (error) {
                 console.error(`Erro ao reverter ação ID ${logId}:`, error);
-                alert(error.response?.data?.error || 'Erro ao reverter ação.');
+                notificationStore.error(error.response?.data?.error || 'Erro ao reverter ação.');
                 // Atualiza o log mesmo em caso de erro (pode ter sido marcado como revertido)
                 await this.fetchRecentActions(); 
                 return false; // Indica falha
@@ -131,34 +134,36 @@ export const useClientStore = defineStore('client', {
 
         // Ação para adicionar um novo serviço (para o modal de gerenciamento)
         async addServico(nomeServico) {
+          const notificationStore = useNotificationStore();
           try {
             const response = await apiClient.post('/servicos', { nome: nomeServico });
             // Adiciona o novo serviço à lista local para não precisar buscar de novo
             this.servicos.push({ id: response.data.id, nome: response.data.nome });
             // Ordena a lista novamente
             this.servicos.sort((a, b) => a.nome.localeCompare(b.nome)); 
-            alert('Serviço adicionado com sucesso!');
+            notificationStore.success('Serviço adicionado com sucesso!');
             return true; // Indica sucesso
           } catch (error) {
             console.error('Erro ao adicionar serviço:', error);
-            alert(error.response?.data?.error || 'Erro ao adicionar serviço.');
+            notificationStore.error(error.response?.data?.error || 'Erro ao adicionar serviço.');
             return false; // Indica falha
           }
         },
 
         // --- NOVA AÇÃO DELETE ---
         async deleteServico(serviceId) {
+          const notificationStore = useNotificationStore();
           try {
             await apiClient.delete(`/servicos/${serviceId}`);
             // Remove o serviço da lista local para atualizar a UI imediatamente
             this.servicos = this.servicos.filter(s => s.id !== serviceId);
-            alert('Serviço excluído com sucesso!');
+            notificationStore.success('Serviço excluído com sucesso!');
             // Opcional: Se um serviço excluído era o selecionado em algum formulário,
             // você pode querer resetar esse campo aqui ou no componente.
             return true; // Indica sucesso
           } catch (error) {
             console.error('Erro ao excluir serviço:', error);
-            alert(error.response?.data?.error || 'Erro ao excluir serviço.');
+            notificationStore.error(error.response?.data?.error || 'Erro ao excluir serviço.');
             return false; // Indica falha
           }
         },
@@ -261,41 +266,50 @@ export const useClientStore = defineStore('client', {
 
         // Substitui as ações do dropdown
         async updateClientStatus(id, statusAction) {
+          const notificationStore = useNotificationStore();
             // statusAction deve ser 'pending', 'paid', ou 'in-day'
             try {
                 // Chama PUT /clientes/mark-pending/:id, mark-paid/:id, etc.
                 await apiClient.put(`/clientes/mark-${statusAction}/${id}`);
+                notificationStore.success('Status do cliente atualizado com sucesso!');
                 this.fetchClients(); // Atualiza a tabela
                 this.fetchStats(); // Atualiza os cards
                 this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
                 console.error('Erro ao atualizar status:', error);
+                notificationStore.error('Erro ao atualizar status do cliente.');
             }
         },
 
         // Substitui adjustDate()
         async adjustClientDate(id, value, unit) {
+          const notificationStore = useNotificationStore();
             try {
                 // Chama PUT /clientes/adjust-date/:id
                 await apiClient.put(`/clientes/adjust-date/${id}`, { value, unit });
+                notificationStore.success('Data do cliente ajustada com sucesso!');
                 this.fetchClients(); 
                 this.fetchStats();
                 this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
                 console.error('Erro ao ajustar data:', error);
+                notificationStore.error('Erro ao ajustar data do cliente.');
             }
         },
         
         // Substitui executeDelete()
         async deleteClient(id) {
+          const notificationStore = useNotificationStore();
             try {
                 // Chama DELETE /clientes/delete/:id
                 await apiClient.delete(`/clientes/delete/${id}`);
+                notificationStore.success('Cliente deletado com sucesso!');
                 this.fetchClients();
                 this.fetchStats();
                 this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
                 console.error('Erro ao deletar cliente:', error);
+                notificationStore.error('Erro ao deletar cliente.');
             }
         },
 
@@ -326,15 +340,16 @@ export const useClientStore = defineStore('client', {
         // --- Funções do Modal (Agora Corretamente Dentro de 'actions') ---
 
         async addClient(clientData) {
+          const notificationStore = useNotificationStore();
           try {
             await apiClient.post('/clientes/add', clientData);
-            alert('Cliente adicionado com sucesso!');
+            notificationStore.success('Cliente adicionado com sucesso!');
             this.fetchClients();
             this.fetchStats();
             this.fetchRecentActions(); // <-- Recarrega o log
           } catch (error) {
             console.error('Erro ao adicionar cliente:', error);
-            alert('Erro ao adicionar cliente.');
+            notificationStore.error('Erro ao adicionar cliente.');
           }
         },
 
@@ -350,26 +365,28 @@ export const useClientStore = defineStore('client', {
         },
 
         async saveMessage(message, type = 'default') {
+          const notificationStore = useNotificationStore();
           try {
             const endpoint = type === 'vencido' ? '/clientes/save-message-vencido' : '/clientes/save-message';
             const response = await apiClient.post(endpoint, { message });
-            alert(response.data.message);
+            notificationStore.success(response.data.message);
           } catch (error) {
             console.error('Erro ao salvar mensagem:', error);
-            alert('Erro ao salvar mensagem.');
+            notificationStore.error('Erro ao salvar mensagem.');
           }
         },
 
         // Ação para o formulário de edição
         async updateClient(clientId, clientData) {
+          const notificationStore = useNotificationStore();
           try {
             await apiClient.put(`/clientes/update/${clientId}`, clientData);
-            alert('Cliente atualizado com sucesso!');
+            notificationStore.success('Cliente atualizado com sucesso!');
             this.fetchClients(); // Atualiza a tabela
             this.fetchRecentActions();
           } catch (error) {
             console.error('Erro ao atualizar cliente:', error);
-            alert('Erro ao atualizar cliente.');
+            notificationStore.error('Erro ao atualizar cliente.');
           }
         }
         
