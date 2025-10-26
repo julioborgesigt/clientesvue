@@ -37,7 +37,12 @@
 
   <v-container fluid class="pa-4">
 
-    <DashboardStats :stats="clientStore.stats" @filter="handleFilter" class="my-4"/>
+    <DashboardStats 
+      :stats="clientStore.stats" 
+      @filter="handleFilter" 
+      @show-pending="openPendingModal" 
+      class="my-4"
+    />
 
     <v-row class="my-4">
 
@@ -73,11 +78,12 @@
     </v-row>
   </v-container>
 
-  <AppModal
-    :is-open="isModalOpen"
-    :modal-type="currentModalType"
-    :client-data="clientToEdit"
-    @close="isModalOpen = false"
+
+  <PendingClientsModal 
+    :is-open="isPendingModalOpen"
+    :is-loading="clientStore.isLoadingPendingClients"
+    :clients="clientStore.pendingThisMonthClients"
+    @close="isPendingModalOpen = false"
   />
 </template>
 
@@ -96,9 +102,33 @@ import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue'
 import ClientTable from '@/components/ClientTable.vue';
 import AppModal from '@/components/AppModal.vue';
 import RecentActions from '@/components/RecentActions.vue'; // <-- IMPORTAR O NOVO COMPONENTE
+// 3. IMPORTAR O NOVO MODAL
+import PendingClientsModal from '@/components/PendingClientsModal.vue';
+
 
 const clientStore = useClientStore();
 const authStore = useAuthStore();
+
+// --- 4. ADICIONAR ESTADO E FUNÇÃO PARA O NOVO MODAL ---
+const isPendingModalOpen = ref(false);
+
+const openPendingModal = () => { 
+  // LOG 1: Função foi chamada?
+  console.log('DashboardView: openPendingModal chamada.'); 
+  
+  // LOG 2: Estado ANTES da mudança
+  console.log('DashboardView: isPendingModalOpen ANTES:', isPendingModalOpen.value); 
+  
+  // 1. ABRE o modal IMEDIATAMENTE
+  isPendingModalOpen.value = true; 
+  
+  // LOG 3: Estado DEPOIS da mudança
+  console.log('DashboardView: isPendingModalOpen DEPOIS:', isPendingModalOpen.value); 
+  
+  // 2. CHAMA a busca dos dados (não precisa esperar aqui)
+  clientStore.fetchPendingThisMonthClients(); 
+};
+// --- FIM DA ADIÇÃO ---
 
 // Estado para o menu lateral
 const drawer = ref(false);

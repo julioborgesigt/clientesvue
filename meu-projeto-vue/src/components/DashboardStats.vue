@@ -38,7 +38,12 @@
     </v-col>
 
     <v-col cols="6" sm="4" md="3">
-      <v-card variant="outlined">
+      <v-card 
+        variant="outlined" 
+        hover 
+        @click="() => { console.log('DashboardStats: Emitindo show-pending (do v-card)'); $emit('show-pending'); }"
+        style="cursor: pointer;"
+      >
          <v-card-title class="text-caption d-flex align-center">
            <v-icon start size="small">mdi-calendar-arrow-right</v-icon>
            Resto Mês (Previsto)
@@ -46,7 +51,7 @@
         <v-card-text class="text-h6 pt-1">
           R$ {{ stats.previsto?.toFixed(2) || '0.00' }}
         </v-card-text>
-      </v-card>
+        </v-card>
     </v-col>
 
     <v-col cols="6" sm="4" md="3">
@@ -65,57 +70,25 @@
         </v-card-text>
       </v-card>
     </v-col>
-
+    
     <v-col cols="6" sm="4" md="3">
-      <v-card
-        variant="tonal"
-        color="red-darken-1" 
-        hover
-        @click="$emit('filter', 'vencidos')"
-      >
-        <v-card-title class="text-caption d-flex align-center">
-          <v-icon start size="small">mdi-alert-circle-outline</v-icon>
-          Vencidos
-        </v-card-title>
-        <v-card-text class="text-h6 pt-1">
-          {{ stats.vencidos || 0 }}
-        </v-card-text>
-      </v-card>
-    </v-col>
-
-    <v-col cols="6" sm="4" md="3">
-      <v-card
-        variant="tonal"
-        color="orange-darken-1"
-        hover
-        @click="$emit('filter', 'vence3')"
-      >
-        <v-card-title class="text-caption d-flex align-center">
-          <v-icon start size="small">mdi-clock-alert-outline</v-icon>
-          Vence em 3 dias
-        </v-card-title>
-        <v-card-text class="text-h6 pt-1">
-          {{ stats.vence3 || 0 }}
-        </v-card-text>
-      </v-card>
-    </v-col>
-
-    <v-col cols="6" sm="4" md="3">
-      <v-card
-        variant="tonal"
-        color="green-darken-1"
-        hover
-        @click="$emit('filter', 'emdias')"
-      >
-        <v-card-title class="text-caption d-flex align-center">
-          <v-icon start size="small">mdi-check-circle-outline</v-icon>
-          Em Dias
-        </v-card-title>
-        <v-card-text class="text-h6 pt-1">
-          {{ stats.emdias || 0 }}
-        </v-card-text>
-      </v-card>
-    </v-col>
+       <v-card variant="tonal" color="red-darken-1" hover @click="$emit('filter', 'vencidos')">
+         <v-card-title class="text-caption d-flex align-center"><v-icon start size="small">mdi-alert-circle-outline</v-icon>Vencidos</v-card-title>
+         <v-card-text class="text-h6 pt-1">{{ stats.vencidos || 0 }}</v-card-text>
+       </v-card>
+     </v-col>
+     <v-col cols="6" sm="4" md="3">
+       <v-card variant="tonal" color="orange-darken-1" hover @click="$emit('filter', 'vence3')">
+         <v-card-title class="text-caption d-flex align-center"><v-icon start size="small">mdi-clock-alert-outline</v-icon>Vence em 3 dias</v-card-title>
+         <v-card-text class="text-h6 pt-1">{{ stats.vence3 || 0 }}</v-card-text>
+       </v-card>
+     </v-col>
+     <v-col cols="6" sm="4" md="3">
+       <v-card variant="tonal" color="green-darken-1" hover @click="$emit('filter', 'emdias')">
+         <v-card-title class="text-caption d-flex align-center"><v-icon start size="small">mdi-check-circle-outline</v-icon>Em Dias</v-card-title>
+         <v-card-text class="text-h6 pt-1">{{ stats.emdias || 0 }}</v-card-text>
+       </v-card>
+     </v-col>
 
   </v-row>
 </template>
@@ -124,7 +97,7 @@
 defineProps({
   stats: Object,
 });
-defineEmits(['filter']);
+defineEmits(['filter', 'show-pending']);
 </script>
 
 <style scoped>
@@ -136,5 +109,9 @@ defineEmits(['filter']);
 }
 .v-card-text {
   padding-top: 0; /* Menos espaço acima do número */
+}
+/* Garante que o cursor mude no card clicável */
+.v-card[style*="cursor: pointer"] {
+  cursor: pointer;
 }
 </style>

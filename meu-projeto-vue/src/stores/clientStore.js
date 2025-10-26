@@ -18,6 +18,8 @@ export const useClientStore = defineStore('client', {
         serviceDistributionData: { labels: [], datasets: [] },
         recentActions: [], // <-- 1. NOVO ESTADO PARA O LOG
         isLoadingActions: false, // <-- 2. ESTADO DE LOADING PARA O LOG
+        pendingThisMonthClients: [], // <-- 1. NOVO ESTADO para guardar a lista
+        isLoadingPendingClients: false, // <-- 2. Estado de loading
     }),
     
     // GETTERS: Dados computados
@@ -29,6 +31,31 @@ export const useClientStore = defineStore('client', {
     // ACTIONS: Suas funções fetch e de manipulação
     actions: {
         // Ação para buscar a lista de serviços da API
+
+        async fetchPendingThisMonthClients() {
+            this.isLoadingPendingClients = true;
+            this.pendingThisMonthClients = []; 
+            try {
+                const response = await apiClient.get('/clientes/pending-this-month'); 
+                
+                // --- INÍCIO DA CORREÇÃO ---
+                // Mapeia os resultados e converte valor_cobrado para número
+                const formattedClients = response.data.map(client => ({
+                    ...client,
+                    valor_cobrado: parseFloat(client.valor_cobrado) || 0 
+                }));
+                // --- FIM DA CORREÇÃO ---
+
+                console.log('clientStore: API /pending-this-month SUCESSO. Dados:', formattedClients); 
+                
+                this.pendingThisMonthClients = formattedClients; // Salva os dados formatados
+            } catch (error) {
+                console.error('clientStore: ERRO ao buscar /pending-this-month:', error); 
+            } finally {
+                console.log('clientStore: fetchPendingThisMonthClients FINALIZADA.'); 
+                this.isLoadingPendingClients = false;
+            }
+        },
 
         // --- NOVA AÇÃO: Reverter ---
         async revertAction(logId) {
