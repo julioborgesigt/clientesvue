@@ -267,7 +267,7 @@
                      icon="mdi-pencil-outline"
                      variant="text"
                      size="small"
-                     color="primary"
+                     
                      @click="openEditServiceDialog(servico)"
                      title="Editar Serviço"
                      class="me-1"
