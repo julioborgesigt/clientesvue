@@ -34,6 +34,36 @@ export const useClientStore = defineStore('client', {
     actions: {
         // Ação para buscar a lista de serviços da API
 
+
+        // --- NOVA AÇÃO: Editar Serviço ---
+        async updateServico(serviceId, newName) {
+            const notificationStore = useNotificationStore();
+            try {
+                const response = await apiClient.put(`/servicos/${serviceId}`, { nome: newName });
+                
+                // Atualiza o nome na lista local
+                const index = this.servicos.findIndex(s => s.id === serviceId);
+                if (index !== -1) {
+                    this.servicos[index].nome = newName.trim();
+                    // Reordena a lista
+                    this.servicos.sort((a, b) => a.nome.localeCompare(b.nome));
+                }
+                
+                // IMPORTANTE: Se um serviço foi renomeado, a lista de *clientes* também pode precisar
+                // ser recarregada para refletir o novo nome no <v-select> do modal de edição de cliente
+                // ou na tabela principal, se você exibir o nome lá.
+                await this.fetchClients(); // Recarrega clientes para garantir consistência
+
+                notificationStore.success(response.data.message || 'Serviço atualizado com sucesso!');
+                return true; // Indica sucesso
+            } catch (error) {
+                console.error('Erro ao editar serviço:', error);
+                notificationStore.error(error.response?.data?.error || 'Erro ao editar serviço.');
+                return false; // Indica falha
+            }
+        },
+        // --- FIM DA NOVA AÇÃO ---
+
         async fetchPendingThisMonthClients() {
             this.isLoadingPendingClients = true;
             this.pendingThisMonthClients = []; 
