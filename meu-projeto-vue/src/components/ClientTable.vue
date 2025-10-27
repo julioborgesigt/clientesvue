@@ -3,9 +3,7 @@
     <v-card-title class="d-flex align-center pe-2">
       <v-icon icon="mdi-account-group"></v-icon>
       <span class="ms-2">Clientes</span>
-      
       <v-spacer></v-spacer>
-      
       <v-text-field
         v-model="search"
         density="compact"
@@ -17,7 +15,7 @@
         single-line
       ></v-text-field>
     </v-card-title>
-    
+
     <v-divider></v-divider>
 
     <v-data-table-server
@@ -27,66 +25,83 @@
       :items="clientStore.clients"
       :loading="clientStore.isLoading"
       density="compact"
-      hover 
+      hover
       @update:options="clientStore.handleTableUpdate"
     >
-      <template v-slot:item.valor_cobrado="{ value }">
-        R$ {{ value.toFixed(2) }}
-      </template>
-      <template v-slot:item.custo="{ value }">
-        R$ {{ value.toFixed(2) }}
-      </template>
-      <template v-slot:item.status="{ value }">
-        <v-chip :color="getStatusColor(value)" size="small">
-          {{ value }}
-        </v-chip>
-      </template>
-      <template v-slot:item.vencimento="{ value }">
-        {{ formatDate(value) }}
-      </template>
-      
+      <template v-slot:item.valor_cobrado="{ value }"> R$ {{ value.toFixed(2) }} </template>
+      <template v-slot:item.custo="{ value }"> R$ {{ value.toFixed(2) }} </template>
+      <template v-slot:item.status="{ value }"> <v-chip :color="getStatusColor(value)" size="small"> {{ value }} </v-chip> </template>
+      <template v-slot:item.vencimento="{ value }"> {{ formatDate(value) }} </template>
+
       <template v-slot:item.actions="{ item }">
-        <div class="d-flex justify-end align-center">
-          <v-icon 
-            size="small" 
-            class="me-1" 
-            @click="handleAction('edit', item)"
-            title="Editar Cliente"
-          >
-            mdi-pencil
-          </v-icon>
-          
+        <div class="d-flex justify-end align-center" style="white-space: nowrap;">
+
+          <v-btn
+            icon="mdi-calendar-plus"
+            variant="text"
+            size="small"
+            @click="handleDate('MONTH', 1, item.id)"
+            title="+1 Mês e Marcar Como Pago"
+            class="me-n2"
+          ></v-btn>
+
+          <v-btn
+            icon="mdi-whatsapp"
+            variant="text"
+            size="small"
+            color="green-darken-1"
+            @click="handleAction('whatsapp', item)"
+            title="Enviar WhatsApp Padrão"
+            class="me-n2"
+          ></v-btn>
+
+          <v-btn
+            icon="mdi-cash-check"
+            variant="text"
+            size="small"
+            color="orange-darken-1"
+            @click="handleStatus('paid', item.id)"
+            title="Marcar Status: Cobrança Feita"
+            class="me-n2"
+          ></v-btn>
+
+           <v-btn
+            icon="mdi-message-alert-outline"
+            variant="text"
+            size="small"
+            color="red-darken-1"
+            @click="handleAction('whatsapp-vencido', item)"
+            title="Enviar WhatsApp (Vencido)"
+            class="me-n2"
+          ></v-btn>
+
           <v-menu location="start">
             <template v-slot:activator="{ props }">
-              <v-btn icon="mdi-dots-vertical" variant="text" size="small" v-bind="props"></v-btn>
+              <v-btn icon="mdi-dots-vertical" variant="text" size="x-small" v-bind="props"></v-btn> 
             </template>
             <v-list density="compact">
-              <v-list-item title="+1 Mês" @click="handleDate('MONTH', 1, item.id)"></v-list-item>
+              <v-list-item title="Editar Cliente" @click="handleAction('edit', item)">
+                 <template v-slot:prepend> <v-icon size="small">mdi-pencil-outline</v-icon> </template>
+              </v-list-item>
+              <v-divider></v-divider>
               <v-list-item title="-1 Mês" @click="handleDate('MONTH', -1, item.id)"></v-list-item>
               <v-divider></v-divider>
-              <v-list-item title="WhatsApp" @click="handleAction('whatsapp', item)"></v-list-item>
-              <v-list-item title="WhatsApp (Vencido)" @click="handleAction('whatsapp-vencido', item)"></v-list-item>
-              <v-divider></v-divider>
               <v-list-item title="Status: Não Pagou" @click="handleStatus('pending', item.id)"></v-list-item>
-              <v-list-item title="Status: Cobrança Feita" @click="handleStatus('paid', item.id)"></v-list-item>
               <v-list-item title="Status: Pag. em Dias" @click="handleStatus('in-day', item.id)"></v-list-item>
               <v-divider></v-divider>
-              <v-list-item title="Excluir" @click="handleDelete(item)">
-                 <template v-slot:prepend>
-                   <v-icon color="red">mdi-delete-outline</v-icon>
-                 </template>
+              <v-list-item title="Excluir Cliente" @click="handleDelete(item)">
+                 <template v-slot:prepend> <v-icon color="red" size="small">mdi-delete-outline</v-icon> </template>
                </v-list-item>
             </v-list>
           </v-menu>
         </div>
       </template>
-
-    </v-data-table-server>
+      </v-data-table-server>
   </v-card>
 </template>
 
 <script setup>
-// O <script setup> não precisa de alterações
+// --- O SCRIPT NÃO PRECISA DE ALTERAÇÕES ---
 import { ref, watch } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
 const clientStore = useClientStore();
@@ -96,45 +111,25 @@ const itemsPerPage = ref(10);
 const searchDebounce = ref(null);
 watch(search, (newValue) => {
   clearTimeout(searchDebounce.value);
-  searchDebounce.value = setTimeout(() => {
-    clientStore.setSearch(newValue);
-  }, 500); 
+  searchDebounce.value = setTimeout(() => { clientStore.setSearch(newValue); }, 500); 
 });
 const headers = [
-  { title: 'ID', key: 'id', align: 'start' },
-  { title: 'Nome', key: 'name' },
-  { title: 'Vencimento', key: 'vencimento' },
-  { title: 'Serviço', key: 'servico' },
-  { title: 'WhatsApp', key: 'whatsapp' },
-  { title: 'Valor (R$)', key: 'valor_cobrado' },
-  { title: 'Custo (R$)', key: 'custo' },
-  { title: 'Status', key: 'status' },
+  { title: 'ID', key: 'id', align: 'start' }, { title: 'Nome', key: 'name' },
+  { title: 'Vencimento', key: 'vencimento' }, { title: 'Serviço', key: 'servico' },
+  { title: 'WhatsApp', key: 'whatsapp' }, { title: 'Valor (R$)', key: 'valor_cobrado' },
+  { title: 'Custo (R$)', key: 'custo' }, { title: 'Status', key: 'status' },
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
 ];
-const handleStatus = (statusAction, clientId) => {
-  clientStore.updateClientStatus(clientId, statusAction);
-};
-const handleDate = (unit, value, clientId) => {
-  clientStore.adjustClientDate(clientId, value, unit);
-};
-const handleDelete = (client) => {
-  if (confirm(`Excluir cliente ${client.name}?`)) {
-    clientStore.deleteClient(client.id);
-  }
-};
+const handleStatus = (statusAction, clientId) => { clientStore.updateClientStatus(clientId, statusAction); };
+const handleDate = (unit, value, clientId) => { clientStore.adjustClientDate(clientId, value, unit); };
+const handleDelete = (client) => { if (confirm(`Excluir cliente ${client.name}?`)) { clientStore.deleteClient(client.id); } };
 const handleAction = (action, client) => {
-  if (action === 'edit') {
-    emit('open-edit-modal', client); 
-  } else {
-    // Implementar lógica do WhatsApp aqui
-    console.log('Ação:', action, client.name); 
-    if (action === 'whatsapp' || action === 'whatsapp-vencido') {
-      const type = action === 'whatsapp-vencido' ? 'vencido' : 'default';
-      sendWhatsAppMessage(client, type); // Chamaremos uma nova função
-    }
-  }
+  if (action === 'edit') { emit('open-edit-modal', client); } 
+  else if (action === 'whatsapp' || action === 'whatsapp-vencido') {
+    const type = action === 'whatsapp-vencido' ? 'vencido' : 'default';
+    sendWhatsAppMessage(client, type); 
+  } else { console.log('Ação desconhecida:', action, client.name); }
 };
-// NOVA FUNÇÃO para WhatsApp
 async function sendWhatsAppMessage(client, messageType = 'default') {
   try {
     const message = await clientStore.fetchMessage(messageType);
@@ -143,10 +138,9 @@ async function sendWhatsAppMessage(client, messageType = 'default') {
       return;
     }
     const vencimentoDate = new Date(client.vencimento);
-    vencimentoDate.setDate(vencimentoDate.getDate() + 1); // Adiciona 1 dia para exibição correta
+    vencimentoDate.setDate(vencimentoDate.getDate() + 1); 
     const formattedDate = vencimentoDate.toLocaleDateString('pt-BR');
     const fullMessage = `${message}\nVencimento: ${formattedDate}`;
-    // Remove o '+' inicial se houver e garante que começa com 55
     const phone = client.whatsapp.startsWith('+') ? client.whatsapp.substring(1) : client.whatsapp; 
     const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
     window.open(whatsappLink, '_blank');
@@ -155,7 +149,6 @@ async function sendWhatsAppMessage(client, messageType = 'default') {
     alert('Erro ao preparar mensagem do WhatsApp.');
   }
 }
-
 const getStatusColor = (status) => {
   if (status === 'Não pagou') return 'red-darken-1';
   if (status === 'cobrança feita') return 'orange-darken-1';
@@ -169,3 +162,16 @@ const formatDate = (dateString) => {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 </script>
+
+<style scoped>
+/* Ajuste de margem ainda mais negativo para aproximar os botões */
+.me-n2 {
+  margin-right: -8px; 
+}
+/* Estilos para o :deep (se necessário) */
+/*
+:deep(td.v-data-table__td.v-data-table-column--align-end) {
+   padding-right: 0 !important; 
+}
+*/
+</style>
