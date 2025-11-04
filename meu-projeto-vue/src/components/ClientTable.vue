@@ -101,9 +101,9 @@
 </template>
 
 <script setup>
-// --- O SCRIPT NÃO PRECISA DE ALTERAÇÕES ---
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
+import { formatDate } from '@/utils/dateUtils';
 const clientStore = useClientStore();
 const emit = defineEmits(['open-edit-modal']);
 const search = ref('');
@@ -111,7 +111,13 @@ const itemsPerPage = ref(10);
 const searchDebounce = ref(null);
 watch(search, (newValue) => {
   clearTimeout(searchDebounce.value);
-  searchDebounce.value = setTimeout(() => { clientStore.setSearch(newValue); }, 500); 
+  searchDebounce.value = setTimeout(() => { clientStore.setSearch(newValue); }, 500);
+});
+// Limpar timeout quando componente for desmontado
+onUnmounted(() => {
+  if (searchDebounce.value) {
+    clearTimeout(searchDebounce.value);
+  }
 });
 const headers = [
   { title: 'ID', key: 'id', align: 'start' }, { title: 'Nome', key: 'name' },
@@ -137,11 +143,10 @@ async function sendWhatsAppMessage(client, messageType = 'default') {
       alert(`Mensagem ${messageType === 'vencido' ? '(Vencido)' : 'Padrão'} não configurada.`);
       return;
     }
-    const vencimentoDate = new Date(client.vencimento);
-    vencimentoDate.setDate(vencimentoDate.getDate() + 1); 
-    const formattedDate = vencimentoDate.toLocaleDateString('pt-BR');
+    // Corrigido: removido o +1 dia que estava causando bug
+    const formattedDate = formatDate(client.vencimento);
     const fullMessage = `${message}\nVencimento: ${formattedDate}`;
-    const phone = client.whatsapp.startsWith('+') ? client.whatsapp.substring(1) : client.whatsapp; 
+    const phone = client.whatsapp.startsWith('+') ? client.whatsapp.substring(1) : client.whatsapp;
     const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
     window.open(whatsappLink, '_blank');
   } catch (error) {
@@ -155,12 +160,7 @@ const getStatusColor = (status) => {
   if (status === 'Pag. em dias') return 'green-darken-1';
   return 'grey';
 };
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  const parts = dateString.split('-');
-  if (parts.length < 3) return dateString;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
-};
+// formatDate agora é importado de @/utils/dateUtils
 </script>
 
 <style scoped>

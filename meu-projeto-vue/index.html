@@ -1,10 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>meu-projeto-vue</title>
+
+    <!-- Security Headers -->
+    <!-- Content Security Policy - Protege contra XSS attacks -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com data:;
+        img-src 'self' data: https: blob:;
+        connect-src 'self' https://clientes.domcloud.dev https://wa.me;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+      "
+    >
+
+    <!-- Referrer Policy - Controla informações enviadas no header Referer -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- X-Content-Type-Options - Previne MIME type sniffing -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
+    <!-- X-Frame-Options - Previne clickjacking -->
+    <meta http-equiv="X-Frame-Options" content="DENY">
+
+    <!-- Permissions Policy - Controla features do navegador -->
+    <meta
+      http-equiv="Permissions-Policy"
+      content="geolocation=(), microphone=(), camera=()"
+    >
+
+    <title>Dashboard de Clientes</title>
   </head>
   <body>
     <div id="app"></div>
