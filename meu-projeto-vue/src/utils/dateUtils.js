@@ -8,7 +8,7 @@ export const formatDate = (dateString) => {
 
     try {
         // Forçar timezone UTC para evitar off-by-one
-        const date = new Date(dateString + 'T00:00:00Z');
+        const date = new Date(dateString + 'T03:00:00Z');
 
         // Verificar se data é válida
         if (isNaN(date.getTime())) {
@@ -62,7 +62,7 @@ export const formatDateForInput = (date) => {
  * @returns {string} - Nova data no formato ISO
  */
 export const addDays = (dateString, days) => {
-    const date = new Date(dateString + 'T00:00:00Z');
+    const date = new Date(dateString + 'T03:00:00Z');
     date.setUTCDate(date.getUTCDate() + days);
     return formatDateForInput(date);
 };
