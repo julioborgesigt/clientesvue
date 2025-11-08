@@ -29,7 +29,15 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         /** @type {string|null} Token JWT armazenado em sessionStorage */
         token: sessionStorage.getItem('token') || null,
-        /** @type {string|null} Timestamp de expiração do token (1 hora após login) */
+        /** @type {string|null} Access token (15 minutos) */
+
+        accessToken: sessionStorage.getItem('accessToken') || null,
+
+        /** @type {string|null} Refresh token (7 dias) */
+
+        refreshToken: sessionStorage.getItem('refreshToken') || null,
+
+        /** @type {string|null} Timestamp de expiração do token (15 minutos após login) */
         tokenExpiry: sessionStorage.getItem('tokenExpiry') || null,
     }),
 
@@ -82,20 +90,49 @@ export const useAuthStore = defineStore('auth', {
                     password
                 });
 
-                // Validar resposta
-                if (!response.data || !response.data.token) {
+                // Validar resposta (novo formato: accessToken + refreshToken)
+
+                if (!response.data || !response.data.accessToken) {
+
                     throw new Error('Resposta inválida do servidor');
+
                 }
 
-                this.token = response.data.token;
+ 
 
-                // Definir expiração (1 hora)
-                const expiry = Date.now() + (60 * 60 * 1000);
+                // Armazena ambos os tokens
+
+                this.accessToken = response.data.accessToken;
+
+                this.refreshToken = response.data.refreshToken;
+
+                // Mantém compatibilidade com código legado
+
+                this.token = response.data.accessToken;
+
+ 
+
+                // Definir expiração (15 minutos conforme backend)
+
+                const expiry = Date.now() + (15 * 60 * 1000);
+
                 this.tokenExpiry = expiry.toString();
 
+ 
+
                 // Usar sessionStorage ao invés de localStorage
-                sessionStorage.setItem('token', response.data.token);
+
+                sessionStorage.setItem('accessToken', response.data.accessToken);
+
+                sessionStorage.setItem('refreshToken', response.data.refreshToken);
+
+                sessionStorage.setItem('token', response.data.accessToken); // Compatibilidade
+
                 sessionStorage.setItem('tokenExpiry', expiry.toString());
+
+ 
+
+                logger.info('Login bem-sucedido');
 
                 // Redireciona para o dashboard
                 router.push('/dashboard');
@@ -158,10 +195,22 @@ export const useAuthStore = defineStore('auth', {
          */
         logout() {
             this.token = null;
+            this.accessToken = null;
+
+            this.refreshToken = null;
+
             this.tokenExpiry = null;
+
             sessionStorage.removeItem('token');
+
+            sessionStorage.removeItem('accessToken');
+
+            sessionStorage.removeItem('refreshToken');
+
             sessionStorage.removeItem('tokenExpiry');
+
             router.push('/login');
+
         },
 
         /**
