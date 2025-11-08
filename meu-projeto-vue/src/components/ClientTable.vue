@@ -98,6 +98,19 @@
       </template>
       </v-data-table-server>
   </v-card>
+
+  <!-- Diálogo de Confirmação de Exclusão -->
+  <ConfirmDialog
+    v-model="deleteDialog"
+    title="Excluir Cliente"
+    :message="`Tem certeza que deseja excluir o cliente &quot;${clientToDelete?.name}&quot;?`"
+    details="Esta ação não pode ser desfeita."
+    icon="mdi-delete-alert-outline"
+    icon-color="error"
+    confirm-text="Excluir"
+    cancel-text="Cancelar"
+    @confirm="handleDeleteConfirmed"
+  />
 </template>
 
 <script setup>
@@ -108,6 +121,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { formatCurrency } from '@/utils/formatters';
 import { getStatusColor } from '@/utils/statusUtils';
 import { sanitizeForURL, sanitizePhone } from '@/utils/sanitize';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
 const clientStore = useClientStore();
 const notificationStore = useNotificationStore();
@@ -132,9 +146,23 @@ const headers = [
   { title: 'Custo (R$)', key: 'custo' }, { title: 'Status', key: 'status' },
   { title: 'Ações', key: 'actions', sortable: false, align: 'end' },
 ];
+
+// Delete confirmation dialog
+const deleteDialog = ref(false);
+const clientToDelete = ref(null);
+
 const handleStatus = (statusAction, clientId) => { clientStore.updateClientStatus(clientId, statusAction); };
 const handleDate = (unit, value, clientId) => { clientStore.adjustClientDate(clientId, value, unit); };
-const handleDelete = (client) => { if (confirm(`Excluir cliente ${client.name}?`)) { clientStore.deleteClient(client.id); } };
+const handleDelete = (client) => {
+  clientToDelete.value = client;
+  deleteDialog.value = true;
+};
+const handleDeleteConfirmed = () => {
+  if (clientToDelete.value) {
+    clientStore.deleteClient(clientToDelete.value.id);
+    clientToDelete.value = null;
+  }
+};
 const handleAction = (action, client) => {
   if (action === 'edit') { emit('open-edit-modal', client); } 
   else if (action === 'whatsapp' || action === 'whatsapp-vencido') {
