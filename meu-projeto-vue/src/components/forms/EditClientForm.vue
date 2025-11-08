@@ -153,7 +153,10 @@ async function handleSubmit() {
 // Populate form when clientData changes
 watch(() => props.clientData, (newData) => {
   if (newData && props.isOpen) {
-    const vencimento = newData.vencimento.split('T')[0];
+    // Validar formato antes de fazer split
+    const vencimento = newData.vencimento?.includes('T')
+      ? newData.vencimento.split('T')[0]
+      : newData.vencimento || '';
     formData.value = { ...newData, vencimento };
   }
 }, { immediate: true });

@@ -76,7 +76,7 @@ export const sanitizeEmail = (email) => {
  * @returns {string} - Nome sanitizado
  */
 export const sanitizeName = (name) => {
-  if (!name || typeof text !== 'string') return '';
+  if (!name || typeof name !== 'string') return '';
 
   // Remove HTML
   let sanitized = sanitizeHTML(name);

@@ -41,6 +41,7 @@
             variant="text"
             size="small"
             @click="handleDate('MONTH', 1, item.id)"
+            :aria-label="`Adicionar 1 mês e marcar como pago para cliente ${item.name}`"
             title="+1 Mês e Marcar Como Pago"
             class="me-n2"
           ></v-btn>
@@ -51,6 +52,7 @@
             size="small"
             color="green-darken-1"
             @click="handleAction('whatsapp', item)"
+            :aria-label="`Enviar mensagem padrão pelo WhatsApp para cliente ${item.name}`"
             title="Enviar WhatsApp Padrão"
             class="me-n2"
           ></v-btn>
@@ -61,6 +63,7 @@
             size="small"
             color="orange-darken-1"
             @click="handleStatus('paid', item.id)"
+            :aria-label="`Marcar status como cobrança feita para cliente ${item.name}`"
             title="Marcar Status: Cobrança Feita"
             class="me-n2"
           ></v-btn>
@@ -71,13 +74,20 @@
             size="small"
             color="red-darken-1"
             @click="handleAction('whatsapp-vencido', item)"
+            :aria-label="`Enviar mensagem de vencido pelo WhatsApp para cliente ${item.name}`"
             title="Enviar WhatsApp (Vencido)"
             class="me-n2"
           ></v-btn>
 
           <v-menu location="start">
             <template v-slot:activator="{ props }">
-              <v-btn icon="mdi-dots-vertical" variant="text" size="x-small" v-bind="props"></v-btn> 
+              <v-btn
+                icon="mdi-dots-vertical"
+                variant="text"
+                size="x-small"
+                :aria-label="`Mais ações para cliente ${item.name}`"
+                v-bind="props"
+              ></v-btn>
             </template>
             <v-list density="compact">
               <v-list-item title="Editar Cliente" @click="handleAction('edit', item)">
