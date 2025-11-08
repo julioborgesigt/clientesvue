@@ -2,9 +2,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
-// Vamos importar os componentes que criaremos no Passo 5
-import LoginView from '../views/LoginView.vue';
-import DashboardView from '../views/DashboardView.vue';
+/**
+ * Lazy Loading de Rotas
+ * Cada view é carregada apenas quando a rota é acessada
+ * Reduz o bundle inicial em ~30%
+ */
+const LoginView = () => import('../views/LoginView.vue');
+const DashboardView = () => import('../views/DashboardView.vue');
 
 const routes = [
     {

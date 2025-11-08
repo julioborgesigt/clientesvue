@@ -101,10 +101,13 @@ export const sanitizeText = (text, maxLength = 500) => {
   // Remove HTML tags
   let sanitized = text.replace(/<[^>]*>/g, '');
 
-  // Remove caracteres de controle
-  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '');
+  // Converter caracteres de controle comuns (tabs, newlines) em espaços
+  sanitized = sanitized.replace(/[\t\n\r]/g, ' ');
 
-  // Remove múltiplos espaços e quebras de linha
+  // Remove outros caracteres de controle perigosos
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  // Normalizar múltiplos espaços em um único espaço
   sanitized = sanitized.replace(/\s+/g, ' ');
 
   // Limita tamanho
@@ -152,6 +155,15 @@ export const sanitizeDate = (date) => {
   // Validar se é data válida
   const dateObj = new Date(date + 'T00:00:00');
   if (isNaN(dateObj.getTime())) {
+    return null;
+  }
+
+  // Validar que os componentes da data correspondem ao input
+  // (evita datas como 2024-02-30 que rolam para março)
+  const [year, month, day] = date.split('-').map(Number);
+  if (dateObj.getUTCFullYear() !== year ||
+      dateObj.getUTCMonth() + 1 !== month ||
+      dateObj.getUTCDate() !== day) {
     return null;
   }
 
