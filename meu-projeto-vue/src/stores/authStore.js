@@ -1,16 +1,44 @@
-// src/stores/authStore.js
+/**
+ * @file authStore.js
+ * @description Store Pinia para gerenciamento de autenticação de usuários
+ * Controla login, logout, registro e validação de token
+ */
+
 import { defineStore } from 'pinia';
 import apiClient from '@/api/axios';
 import router from '@/router';
 import { useNotificationStore } from './notificationStore';
 import { logger } from '@/utils/logger';
 
+/**
+ * Store de Autenticação
+ * @typedef {Object} AuthState
+ * @property {string|null} token - Token JWT de autenticação
+ * @property {string|null} tokenExpiry - Timestamp de expiração do token
+ */
+
+/**
+ * Hook do store de autenticação
+ * @returns {Object} Store de autenticação com state, getters e actions
+ */
 export const useAuthStore = defineStore('auth', {
+    /**
+     * Estado do store de autenticação
+     * @returns {AuthState}
+     */
     state: () => ({
+        /** @type {string|null} Token JWT armazenado em sessionStorage */
         token: sessionStorage.getItem('token') || null,
+        /** @type {string|null} Timestamp de expiração do token (1 hora após login) */
         tokenExpiry: sessionStorage.getItem('tokenExpiry') || null,
     }),
+
     getters: {
+        /**
+         * Verifica se o usuário está autenticado e se o token ainda é válido
+         * @param {AuthState} state - Estado do store
+         * @returns {boolean} True se autenticado e token não expirado
+         */
         isAuthenticated: (state) => {
             if (!state.token) return false;
 
@@ -25,7 +53,18 @@ export const useAuthStore = defineStore('auth', {
             return true;
         },
     },
+
     actions: {
+        /**
+         * Realiza login do usuário
+         * @async
+         * @param {string} email - Email do usuário
+         * @param {string} password - Senha do usuário
+         * @throws {Error} Se credenciais inválidas ou erro de rede
+         * @returns {Promise<void>}
+         * @example
+         * await authStore.login('user@example.com', 'password123')
+         */
         async login(email, password) {
             const notificationStore = useNotificationStore();
             try {
@@ -69,6 +108,17 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        /**
+         * Registra um novo usuário no sistema
+         * @async
+         * @param {string} name - Nome completo do usuário
+         * @param {string} email - Email do usuário
+         * @param {string} password - Senha do usuário
+         * @throws {Error} Se dados inválidos ou erro de rede
+         * @returns {Promise<boolean>} True se registro bem-sucedido
+         * @example
+         * const success = await authStore.register('João Silva', 'joao@example.com', 'senha123')
+         */
         async register(name, email, password) {
             const notificationStore = useNotificationStore();
             try {
@@ -99,6 +149,13 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        /**
+         * Realiza logout do usuário
+         * Limpa token, tokenExpiry e sessionStorage, depois redireciona para /login
+         * @returns {void}
+         * @example
+         * authStore.logout()
+         */
         logout() {
             this.token = null;
             this.tokenExpiry = null;
@@ -107,7 +164,14 @@ export const useAuthStore = defineStore('auth', {
             router.push('/login');
         },
 
-        // Verificar token periodicamente
+        /**
+         * Verifica periodicamente se o token expirou
+         * Se expirado ou inválido, faz logout automático
+         * Deve ser chamado em intervalos regulares (ex: a cada minuto)
+         * @returns {void}
+         * @example
+         * setInterval(() => authStore.checkTokenExpiry(), 60000) // Verifica a cada minuto
+         */
         checkTokenExpiry() {
             if (!this.isAuthenticated) {
                 logger.warn('Token inválido ou expirado, fazendo logout');
