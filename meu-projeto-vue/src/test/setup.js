@@ -9,3 +9,8 @@ global.console = {
   log: vi.fn(),
   debug: vi.fn(),
 };
+
+// Mock para ignorar imports de CSS
+vi.mock('*.css', () => ({}));
+vi.mock('*.scss', () => ({}));
+vi.mock('*.sass', () => ({}));

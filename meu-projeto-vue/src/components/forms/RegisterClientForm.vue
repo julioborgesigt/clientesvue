@@ -1,7 +1,7 @@
 <template>
-  <v-form ref="formRef" @submit.prevent="handleSubmit">
-    <h4 class="text-subtitle-1 mb-2 mt-2">Dados do Cliente</h4>
-    <v-row no-gutters>
+  <v-form ref="formRef" @submit.prevent="handleSubmit" role="form" aria-label="Formulário de cadastro de cliente">
+    <h4 class="text-subtitle-1 mb-2 mt-2" id="client-data-heading">Dados do Cliente</h4>
+    <v-row no-gutters role="group" aria-labelledby="client-data-heading">
       <v-col cols="12" class="py-0">
         <v-text-field
           label="Nome*"
@@ -11,6 +11,9 @@
           prepend-inner-icon="mdi-account"
           class="mb-2"
           variant="outlined"
+          aria-label="Nome completo do cliente (obrigatório)"
+          aria-required="true"
+          autocomplete="name"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" class="py-0 pe-sm-2">
@@ -23,7 +26,11 @@
           prepend-inner-icon="mdi-calendar-month"
           class="mb-2"
           variant="outlined"
+          aria-label="Data de vencimento da assinatura (obrigatório)"
+          aria-required="true"
+          aria-describedby="vencimento-hint"
         ></v-text-field>
+        <span id="vencimento-hint" class="sr-only">Formato: DD/MM/AAAA</span>
       </v-col>
       <v-col cols="12" sm="6" class="py-0 ps-sm-0">
         <v-select
@@ -36,6 +43,8 @@
           prepend-inner-icon="mdi-briefcase-outline"
           class="mb-2"
           variant="outlined"
+          aria-label="Tipo de serviço contratado"
+          clearable
         ></v-select>
       </v-col>
       <v-col cols="12" class="py-0">
@@ -47,12 +56,18 @@
           density="compact"
           class="mb-4"
           variant="outlined"
+          aria-label="Número de WhatsApp com código do país (obrigatório)"
+          aria-required="true"
+          aria-describedby="whatsapp-hint"
+          type="tel"
+          autocomplete="tel"
         ></v-text-field>
+        <span id="whatsapp-hint" class="sr-only">Exemplo: +5511987654321</span>
       </v-col>
     </v-row>
 
-    <h4 class="text-subtitle-1 mb-2">Valores</h4>
-    <v-row no-gutters>
+    <h4 class="text-subtitle-1 mb-2" id="values-heading">Valores</h4>
+    <v-row no-gutters role="group" aria-labelledby="values-heading">
       <v-col cols="12" sm="6" class="py-0 pe-sm-2">
         <v-text-field
           label="Valor Cobrado (R$)*"
@@ -64,6 +79,11 @@
           prepend-inner-icon="mdi-currency-usd"
           class="mb-2"
           variant="outlined"
+          aria-label="Valor cobrado do cliente em reais (obrigatório)"
+          aria-required="true"
+          inputmode="decimal"
+          step="0.01"
+          min="0"
         ></v-text-field>
       </v-col>
       <v-col cols="12" sm="6" class="py-0 ps-sm-0">
@@ -77,12 +97,17 @@
           prepend-inner-icon="mdi-hand-coin-outline"
           class="mb-4"
           variant="outlined"
+          aria-label="Custo operacional em reais (obrigatório)"
+          aria-required="true"
+          inputmode="decimal"
+          step="0.01"
+          min="0"
         ></v-text-field>
       </v-col>
     </v-row>
 
-    <h4 class="text-subtitle-1 mb-2">Observações</h4>
-    <v-row no-gutters>
+    <h4 class="text-subtitle-1 mb-2" id="observations-heading">Observações</h4>
+    <v-row no-gutters role="group" aria-labelledby="observations-heading">
       <v-col cols="12" class="py-0">
         <v-textarea
           label="Observações"
@@ -94,6 +119,8 @@
           class="mb-4"
           variant="outlined"
           counter="500"
+          aria-label="Observações adicionais sobre o cliente (opcional)"
+          maxlength="500"
         ></v-textarea>
       </v-col>
     </v-row>
@@ -163,5 +190,18 @@ defineExpose({
 <style scoped>
 :deep(.v-input__details) {
   padding-bottom: 4px !important;
+}
+
+/* Screen-reader only class - visível apenas para leitores de tela */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 </style>
