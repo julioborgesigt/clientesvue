@@ -93,6 +93,17 @@
     :client-data="clientToEdit"
     @close="isModalOpen = false"
   />
+
+  <ConfirmDialog
+    v-model="logoutDialog"
+    title="Confirmar Saída"
+    message="Deseja realmente sair do sistema?"
+    icon="mdi-logout"
+    icon-color="warning"
+    confirm-text="Sair"
+    cancel-text="Cancelar"
+    @confirm="handleLogoutConfirmed"
+  />
   </template>
 
 <script setup>
@@ -107,8 +118,9 @@ import ClientChart from '@/components/ClientChart.vue';
 import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue'; 
 import ClientTable from '@/components/ClientTable.vue';
 import AppModal from '@/components/AppModal.vue'; // <-- AppModal importado
-import RecentActions from '@/components/RecentActions.vue'; 
+import RecentActions from '@/components/RecentActions.vue';
 import PendingClientsModal from '@/components/PendingClientsModal.vue'; // <-- PendingClientsModal importado
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
 
 const clientStore = useClientStore();
@@ -148,10 +160,12 @@ const toggleTheme = () => {
 };
 
 // Lógica Logout
+const logoutDialog = ref(false);
 const handleLogout = () => {
-  if (confirm('Deseja realmente sair?')) {
-    authStore.logout();
-  }
+  logoutDialog.value = true;
+};
+const handleLogoutConfirmed = () => {
+  authStore.logout();
 };
 
 // Carregamento de dados
