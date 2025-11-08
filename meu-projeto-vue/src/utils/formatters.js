@@ -3,6 +3,8 @@
  * Centraliza toda formatação de moeda e números
  */
 
+import { logger } from './logger';
+
 /**
  * Formata valor monetário para Real Brasileiro
  * @param {number|string|null|undefined} value - Valor a formatar
@@ -23,7 +25,7 @@ export const formatCurrency = (value) => {
 
   // Validar se é número válido
   if (isNaN(numValue) || !isFinite(numValue)) {
-    console.warn('formatCurrency: valor inválido recebido:', value);
+    logger.warn('formatCurrency: valor inválido recebido:', value);
     return 'R$ 0,00';
   }
 

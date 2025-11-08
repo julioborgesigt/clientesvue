@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import apiClient from '@/api/axios';
 import router from '@/router';
 import { useNotificationStore } from './notificationStore';
+import { logger } from '@/utils/logger';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -17,7 +18,7 @@ export const useAuthStore = defineStore('auth', {
             if (state.tokenExpiry) {
                 const now = Date.now();
                 if (now > parseInt(state.tokenExpiry)) {
-                    console.warn('Token expirado');
+                    logger.warn('Token expirado');
                     return false;
                 }
             }
@@ -60,7 +61,7 @@ export const useAuthStore = defineStore('auth', {
                 // Redireciona para o dashboard
                 router.push('/dashboard');
             } catch (error) {
-                console.error('Erro no login:', error);
+                logger.error('Erro no login:', error);
                 // Mensagem genérica para não expor detalhes
                 const message = 'Falha na autenticação. Verifique suas credenciais e tente novamente.';
                 notificationStore.error(message);
@@ -90,7 +91,7 @@ export const useAuthStore = defineStore('auth', {
                 notificationStore.success(response.data.message || 'Cadastro realizado com sucesso!');
                 return true;
             } catch (error) {
-                console.error('Erro no registro:', error);
+                logger.error('Erro no registro:', error);
                 // Mensagem genérica
                 const message = 'Erro ao registrar. Tente novamente.';
                 notificationStore.error(message);
@@ -109,7 +110,7 @@ export const useAuthStore = defineStore('auth', {
         // Verificar token periodicamente
         checkTokenExpiry() {
             if (!this.isAuthenticated) {
-                console.warn('Token inválido ou expirado, fazendo logout');
+                logger.warn('Token inválido ou expirado, fazendo logout');
                 this.logout();
             }
         }

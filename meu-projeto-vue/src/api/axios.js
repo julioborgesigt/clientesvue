@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { getEnv } from '@/utils/env';
+import { logger } from '@/utils/logger';
 
 // Contador de requisições pendentes para debugging
 let pendingRequests = 0;
@@ -29,7 +30,7 @@ apiClient.interceptors.request.use(
             } else {
                 // Bloquear requisição se não tiver token em rotas protegidas
                 pendingRequests--;
-                console.warn('Tentativa de requisição sem token:', config.url);
+                logger.warn('Tentativa de requisição sem token');
                 return Promise.reject(new Error('Token não encontrado'));
             }
         }
@@ -49,7 +50,7 @@ apiClient.interceptors.response.use(
 
         // Validar estrutura básica da resposta
         if (!response.data && response.status !== 204) {
-            console.warn('Resposta sem dados:', response);
+            logger.warn('Resposta sem dados');
         }
 
         return response;
@@ -64,43 +65,43 @@ apiClient.interceptors.response.use(
             switch (status) {
                 case 401:
                     // Token inválido ou expirado
-                    console.warn('Não autorizado - redirecionando para login');
+                    logger.warn('Não autorizado - redirecionando para login');
                     const authStore = useAuthStore();
                     authStore.logout();
                     break;
 
                 case 403:
-                    console.error('Acesso negado');
+                    logger.error('Acesso negado');
                     break;
 
                 case 404:
-                    console.error('Recurso não encontrado:', error.config.url);
+                    logger.error('Recurso não encontrado');
                     break;
 
                 case 422:
-                    console.error('Dados inválidos:', error.response.data);
+                    logger.error('Dados inválidos');
                     break;
 
                 case 429:
-                    console.error('Muitas requisições - aguarde antes de tentar novamente');
+                    logger.error('Muitas requisições - aguarde antes de tentar novamente');
                     break;
 
                 case 500:
                 case 502:
                 case 503:
-                    console.error('Erro no servidor - tente novamente mais tarde');
+                    logger.error('Erro no servidor - tente novamente mais tarde');
                     break;
 
                 default:
-                    console.error(`Erro ${status}:`, error.response.data);
+                    logger.error(`Erro ${status}`);
             }
         } else if (error.code === 'ECONNABORTED') {
-            console.error('Requisição expirou - timeout de', apiClient.defaults.timeout, 'ms');
+            logger.error('Requisição expirou - timeout');
         } else if (error.message === 'Network Error') {
-            console.error('Erro de conexão - verifique sua internet');
+            logger.error('Erro de conexão - verifique sua internet');
         } else if (error.message === 'Token não encontrado') {
             // Erro customizado do interceptor de request
-            console.error('Token ausente para rota protegida');
+            logger.error('Token ausente para rota protegida');
         }
 
         return Promise.reject(error);

@@ -1,3 +1,5 @@
+import { logger } from './logger';
+
 /**
  * Formata data do formato ISO para pt-BR
  * @param {string} dateString - Data no formato ISO (YYYY-MM-DD)
@@ -12,7 +14,7 @@ export const formatDate = (dateString) => {
 
         // Verificar se data é válida
         if (isNaN(date.getTime())) {
-            console.warn('Data inválida:', dateString);
+            logger.warn('Data inválida:', dateString);
             return dateString;
         }
 
@@ -23,7 +25,7 @@ export const formatDate = (dateString) => {
             year: 'numeric'
         });
     } catch (e) {
-        console.error('Erro ao formatar data:', e);
+        logger.error('Erro ao formatar data:', e);
         return dateString;
     }
 };
@@ -50,7 +52,7 @@ export const formatDateForInput = (date) => {
 
         return `${year}-${month}-${day}`;
     } catch (e) {
-        console.error('Erro ao formatar data para input:', e);
+        logger.error('Erro ao formatar data para input:', e);
         return '';
     }
 };
