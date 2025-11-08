@@ -4,6 +4,9 @@
     @update:model-value="$emit('update:modelValue', $event)"
     max-width="500px"
     persistent
+    role="alertdialog"
+    :aria-labelledby="titleId"
+    :aria-describedby="messageId"
   >
     <v-card>
       <v-card-title class="d-flex align-center">
@@ -13,12 +16,13 @@
           :color="iconColor"
           class="me-3"
           size="28"
+          aria-hidden="true"
         ></v-icon>
-        <span>{{ title }}</span>
+        <span :id="titleId">{{ title }}</span>
       </v-card-title>
 
       <v-card-text class="pt-4">
-        <p class="text-body-1">{{ message }}</p>
+        <p :id="messageId" class="text-body-1">{{ message }}</p>
         <p v-if="details" class="text-body-2 text-disabled mt-2">
           {{ details }}
         </p>
@@ -30,6 +34,7 @@
           :color="cancelColor"
           variant="text"
           @click="handleCancel"
+          :aria-label="`${cancelText} e fechar diálogo`"
         >
           {{ cancelText }}
         </v-btn>
@@ -37,6 +42,8 @@
           :color="confirmColor"
           variant="flat"
           @click="handleConfirm"
+          :aria-label="`${confirmText} ação`"
+          ref="confirmBtn"
         >
           {{ confirmText }}
         </v-btn>
@@ -46,6 +53,8 @@
 </template>
 
 <script setup>
+import { ref, computed, watch, nextTick } from 'vue';
+
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -91,6 +100,12 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'confirm', 'cancel']);
 
+// Generate unique IDs for accessibility
+const titleId = computed(() => `confirm-dialog-title-${Math.random().toString(36).substr(2, 9)}`);
+const messageId = computed(() => `confirm-dialog-message-${Math.random().toString(36).substr(2, 9)}`);
+
+const confirmBtn = ref(null);
+
 function handleConfirm() {
   emit('confirm');
   emit('update:modelValue', false);
@@ -100,4 +115,13 @@ function handleCancel() {
   emit('cancel');
   emit('update:modelValue', false);
 }
+
+// Auto-focus confirm button when dialog opens (accessibility)
+watch(() => props.modelValue, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      confirmBtn.value?.$el?.focus();
+    });
+  }
+});
 </script>
