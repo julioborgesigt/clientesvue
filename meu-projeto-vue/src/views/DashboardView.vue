@@ -116,12 +116,9 @@ const authStore = useAuthStore();
 
 // Estado Modal Pendentes
 const isPendingModalOpen = ref(false);
-const openPendingModal = () => { 
-  console.log('DashboardView: openPendingModal chamada.'); 
-  console.log('DashboardView: isPendingModalOpen ANTES:', isPendingModalOpen.value); 
-  isPendingModalOpen.value = true; 
-  console.log('DashboardView: isPendingModalOpen DEPOIS:', isPendingModalOpen.value); 
-  clientStore.fetchPendingThisMonthClients(); 
+const openPendingModal = () => {
+  isPendingModalOpen.value = true;
+  clientStore.fetchPendingThisMonthClients();
 };
 
 // Estado Menu Lateral

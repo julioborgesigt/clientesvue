@@ -1,6 +1,6 @@
 <template>
   <v-row>
-    
+
     <v-col cols="6" sm="4" md="3">
       <v-card variant="outlined">
         <v-card-title class="text-caption d-flex align-center">
@@ -8,11 +8,11 @@
           Custo Total
         </v-card-title>
         <v-card-text class="text-h6 pt-1">
-          R$ {{ stats.custoTotal?.toFixed(2) || '0.00' }}
+          {{ formatCurrency(stats.custoTotal) }}
         </v-card-text>
       </v-card>
     </v-col>
-    
+
     <v-col cols="6" sm="4" md="3">
       <v-card variant="outlined">
          <v-card-title class="text-caption d-flex align-center">
@@ -20,7 +20,7 @@
            Previsão (Apurado)
          </v-card-title>
         <v-card-text class="text-h6 pt-1">
-          R$ {{ stats.valorApurado?.toFixed(2) || '0.00' }}
+          {{ formatCurrency(stats.valorApurado) }}
         </v-card-text>
       </v-card>
     </v-col>
@@ -32,16 +32,16 @@
            Lucro
          </v-card-title>
         <v-card-text class="text-h6 pt-1">
-          R$ {{ stats.lucro?.toFixed(2) || '0.00' }}
+          {{ formatCurrency(stats.lucro) }}
         </v-card-text>
       </v-card>
     </v-col>
 
     <v-col cols="6" sm="4" md="3">
-      <v-card 
-        variant="outlined" 
-        hover 
-        @click="() => { console.log('DashboardStats: Emitindo show-pending (do v-card)'); $emit('show-pending'); }"
+      <v-card
+        variant="outlined"
+        hover
+        @click="$emit('show-pending')"
         style="cursor: pointer;"
       >
          <v-card-title class="text-caption d-flex align-center">
@@ -49,7 +49,7 @@
            Resto Mês (Previsto)
          </v-card-title>
         <v-card-text class="text-h6 pt-1">
-          R$ {{ stats.previsto?.toFixed(2) || '0.00' }}
+          {{ formatCurrency(stats.previsto) }}
         </v-card-text>
         </v-card>
     </v-col>
@@ -94,6 +94,8 @@
 </template>
 
 <script setup>
+import { formatCurrency } from '@/utils/formatters';
+
 defineProps({
   stats: Object,
 });

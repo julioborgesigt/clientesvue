@@ -67,7 +67,6 @@ const handleDelete = () => {
 
 const handleAction = (action) => {
   // Lógica para 'edit', 'whatsapp', etc.
-  console.log(action, props.client.id);
   isOpen.value = false;
   // (Lógica do modal de edição e do whatsapp virá aqui)
 };

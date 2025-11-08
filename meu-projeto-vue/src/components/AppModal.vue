@@ -34,7 +34,7 @@
                   label="Vencimento*"
                   v-model="form.vencimento"
                   type="date"
-                  :rules="[rules.required]"
+                  :rules="[rules.required, rules.dateValid]"
                   density="compact"
                   prepend-inner-icon="mdi-calendar-month"
                   class="mb-2"
@@ -73,7 +73,7 @@
                 <v-text-field
                   label="Valor Cobrado (R$)*"
                   v-model.number="form.valor_cobrado"
-                  :rules="[rules.required, rules.numeric]"
+                  :rules="[rules.required, rules.positiveNumber]"
                   type="number"
                   prefix="R$"
                   density="compact"
@@ -86,7 +86,7 @@
                 <v-text-field
                   label="Custo (R$)*"
                   v-model.number="form.custo"
-                  :rules="[rules.required, rules.numeric]"
+                  :rules="[rules.required, rules.positiveNumber]"
                   type="number"
                   prefix="R$"
                   density="compact"
@@ -103,11 +103,13 @@
                 <v-textarea
                   label="Observações"
                   v-model="form.observacoes"
+                  :rules="[rules.observacoesValid]"
                   rows="2"
                   density="compact"
                   prepend-inner-icon="mdi-comment-text-outline"
                   class="mb-4"
                   variant="outlined"
+                  counter="500"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -172,7 +174,7 @@
                  <v-text-field
                    label="Valor (R$)*"
                    v-model.number="form.valor_cobrado"
-                   :rules="[rules.required, rules.numeric]"
+                   :rules="[rules.required, rules.positiveNumber]"
                    type="number"
                    prefix="R$"
                    density="compact"
@@ -185,7 +187,7 @@
                  <v-text-field
                    label="Custo (R$)*"
                    v-model.number="form.custo"
-                   :rules="[rules.required, rules.numeric]"
+                   :rules="[rules.required, rules.positiveNumber]"
                    type="number"
                    prefix="R$"
                    density="compact"
@@ -327,6 +329,8 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
 import { useTheme } from 'vuetify';
+import { rules } from '@/utils/validators';
+import { sanitizeClientData, sanitizeText } from '@/utils/sanitize';
 
 // --- Referências para Formulários ---
 const registerFormRef = ref(null);
@@ -375,14 +379,20 @@ const form = ref(null);
 async function handleRegisterSubmit() {
   const { valid } = await registerFormRef.value.validate();
   if (!valid) return;
-  await clientStore.addClient(form.value);
+
+  // Sanitizar dados antes de enviar
+  const sanitizedData = sanitizeClientData(form.value);
+  await clientStore.addClient(sanitizedData);
   emit('close');
 }
 async function handleEditSubmit() {
   const { valid } = await editFormRef.value.validate();
   if (!valid) return;
   if (!form.value || !form.value.id) return;
-  await clientStore.updateClient(form.value.id, form.value);
+
+  // Sanitizar dados antes de enviar
+  const sanitizedData = sanitizeClientData(form.value);
+  await clientStore.updateClient(form.value.id, sanitizedData);
   emit('close');
 }
 
@@ -413,7 +423,10 @@ async function handleSaveService() {
   const { valid } = await serviceFormRef.value.validate();
   if (!valid) return;
   if (!newServiceName.value || newServiceName.value.trim() === '') return;
-  const success = await clientStore.addServico(newServiceName.value.trim());
+
+  // Sanitizar nome do serviço
+  const safeName = sanitizeText(newServiceName.value, 50);
+  const success = await clientStore.addServico(safeName);
   if (success) {
     newServiceName.value = '';
   }
@@ -429,50 +442,32 @@ const editDialog = ref(false);
 const editingService = ref(null);
 const editingServiceName = ref('');
 function openEditServiceDialog(servico) {
-  console.log('AppModal: openEditServiceDialog chamada com:', servico);
   editingService.value = { ...servico };
   editingServiceName.value = servico.nome;
-  console.log('AppModal: editDialog ANTES:', editDialog.value);
   editDialog.value = true;
-  console.log('AppModal: editDialog DEPOIS:', editDialog.value);
   nextTick(() => {
-     try {
-       editServiceFieldRef.value?.focus();
-       console.log('AppModal: Foco no campo de edição tentado.');
-     } catch(e) {
-       console.error('AppModal: Erro ao focar campo:', e);
-     }
+    editServiceFieldRef.value?.focus();
   });
 }
 function closeEditServiceDialog() {
-  console.log('AppModal: closeEditServiceDialog chamada.');
   editDialog.value = false;
   editingService.value = null;
   editingServiceName.value = '';
   editServiceFormRef.value?.resetValidation();
 }
 async function handleUpdateService() {
-  console.log('AppModal: handleUpdateService INICIADA.');
-  if (!editServiceFormRef.value) {
-      console.error('AppModal: Ref do FORMULÁRIO de edição não encontrada!');
-      return;
-  }
+  if (!editServiceFormRef.value) return;
+
   const { valid } = await editServiceFormRef.value.validate();
-  console.log('AppModal: Resultado da validação do FORMULÁRIO:', valid);
-  if (!valid || !editingService.value) {
-      console.log('AppModal: Validação do formulário falhou ou serviço não definido. Saindo.');
-      return;
-  }
+  if (!valid || !editingService.value) return;
+
   const serviceId = editingService.value.id;
-  const newName = editingServiceName.value.trim();
-  console.log(`AppModal: Chamando clientStore.updateServico(ID: ${serviceId}, Novo Nome: "${newName}")`);
-  const success = await clientStore.updateServico(serviceId, newName);
-  console.log('AppModal: Retorno de clientStore.updateServico:', success);
+
+  // Sanitizar nome do serviço
+  const safeName = sanitizeText(editingServiceName.value, 50);
+  const success = await clientStore.updateServico(serviceId, safeName);
   if (success) {
-    console.log('AppModal: Sucesso recebido, fechando diálogo.');
     closeEditServiceDialog();
-  } else {
-     console.log('AppModal: Falha recebida, NÃO fechando diálogo.');
   }
 }
 
@@ -519,17 +514,8 @@ const submitButtonColor = computed(() => {
   return theme.global.current.value.dark ? 'grey-darken-1' : 'primary';
 });
 
-// --- Regras de Validação ---
-const rules = {
-  required: value => !!value || 'Campo obrigatório.',
-  numeric: value => (!isNaN(parseFloat(value)) && isFinite(value)) || 'Deve ser um número.',
-  whatsappFormat: value => {
-      if (!value) return true;
-      const pattern = /^(?:\+?55)?(?:[1-9]{2})?(?:9[1-9]|8[1-9])\d{7}$/;
-      const numericValue = value.startsWith('+') ? '+' + value.replace(/\D/g, '') : value.replace(/\D/g, '');
-      return pattern.test(numericValue) || 'Formato inválido (ex: 55XX912345678).';
-  }
-};
+// Regras de validação agora são importadas de @/utils/validators
+// Sanitizadores importados de @/utils/sanitize
 
 </script>
 
