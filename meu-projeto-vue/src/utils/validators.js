@@ -6,7 +6,7 @@
 /**
  * DDDs válidos no Brasil (atualizado 2025)
  */
-const VALID_DDDS = [
+export const VALID_DDDS = [
   11, 12, 13, 14, 15, 16, 17, 18, 19, // SP
   21, 22, 24, // RJ
   27, 28, // ES
