@@ -26,20 +26,46 @@
 </template>
 
 <script setup>
+/**
+ * @fileoverview Componente de navegação principal do Dashboard
+ * @description Barra de navegação superior com menu de ações e logout
+ * @component Navbar
+ *
+ * @emits open-modal - Emitido quando usuário clica em "Cadastrar Cliente", "Editar Mensagem Padrão", etc
+ *   @param {'register'|'editMessage'|'editVencidoMessage'} modalType - Tipo de modal a abrir
+ *
+ * @example
+ * <Navbar @open-modal="handleOpenModal" />
+ */
+
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
-// Define os eventos que este componente pode emitir
+/**
+ * Define os eventos que este componente pode emitir
+ * @fires open-modal - Evento para abrir modais de cadastro e edição de mensagens
+ */
 defineEmits(['open-modal']);
 
 const authStore = useAuthStore();
+
+/** @type {import('vue').Ref<boolean>} Controla exibição do diálogo de confirmação de logout */
 const logoutDialog = ref(false);
 
+/**
+ * Abre diálogo de confirmação de logout
+ * @returns {void}
+ */
 const handleLogout = () => {
   logoutDialog.value = true;
 };
 
+/**
+ * Executa logout após confirmação do usuário
+ * Chama authStore.logout() que limpa sessão e redireciona para /login
+ * @returns {void}
+ */
 const handleLogoutConfirmed = () => {
   authStore.logout();
 };

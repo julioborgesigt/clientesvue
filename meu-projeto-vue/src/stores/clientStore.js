@@ -1,11 +1,42 @@
-// src/stores/clientStore.js
+/**
+ * @file clientStore.js
+ * @description Store Pinia para gerenciamento completo de clientes
+ * Controla CRUD de clientes, paginação, filtros, estatísticas, gráficos e logs de ações
+ */
+
 import { defineStore } from 'pinia';
 import apiClient from '@/api/axios';
 import { useNotificationStore } from './notificationStore';
 
+/**
+ * Store de Clientes
+ * @typedef {Object} ClientState
+ * @property {Array} clients - Lista de clientes da página atual
+ * @property {Object} stats - Estatísticas do dashboard (custo, lucro, etc)
+ * @property {Object} chartData - Dados para gráfico de pagamentos
+ * @property {number} currentPage - Página atual da tabela
+ * @property {number} limit - Itens por página
+ * @property {string} statusFilter - Filtro de status ('vence3', 'pending', etc)
+ * @property {string} searchQuery - Termo de busca
+ * @property {number} totalClients - Total de clientes (para paginação)
+ * @property {boolean} isLoading - Estado de carregamento
+ * @property {Array} servicos - Lista de serviços disponíveis
+ * @property {Object} serviceDistributionData - Dados do gráfico de distribuição por serviço
+ * @property {Array} recentActions - Log de ações recentes
+ * @property {boolean} isLoadingActions - Carregamento do log de ações
+ * @property {Array} pendingThisMonthClients - Clientes pendentes do mês
+ * @property {boolean} isLoadingPendingClients - Carregamento de pendentes
+ */
 
+/**
+ * Hook do store de clientes
+ * @returns {Object} Store de clientes com state, getters e actions
+ */
 export const useClientStore = defineStore('client', {
-    // STATE: Suas variáveis globais
+    /**
+     * Estado do store de clientes
+     * @returns {ClientState}
+     */
     state: () => ({
         clients: [],
         stats: {},
@@ -30,12 +61,20 @@ export const useClientStore = defineStore('client', {
         pageInfo: (state) => `Página ${state.currentPage} de ${state.totalPages || 1}`,
     },
 
-    // ACTIONS: Suas funções fetch e de manipulação
+    /**
+     * Actions do store de clientes
+     * Métodos para interagir com a API e atualizar o estado
+     */
     actions: {
-        // Ação para buscar a lista de serviços da API
-
-
-        // --- NOVA AÇÃO: Editar Serviço ---
+        /**
+         * Atualiza o nome de um serviço existente
+         * @async
+         * @param {number} serviceId - ID do serviço
+         * @param {string} newName - Novo nome do serviço
+         * @returns {Promise<boolean>} True se sucesso, false se falha
+         * @example
+         * const success = await clientStore.updateServico(5, 'Hosting Premium')
+         */
         async updateServico(serviceId, newName) {
             const notificationStore = useNotificationStore();
             try {
@@ -61,8 +100,13 @@ export const useClientStore = defineStore('client', {
                 return false; // Indica falha
             }
         },
-        // --- FIM DA NOVA AÇÃO ---
 
+        /**
+         * Busca lista de clientes com vencimento no mês atual e status pendente
+         * Utilizado no card "Pendentes este Mês"
+         * @async
+         * @returns {Promise<void>}
+         */
         async fetchPendingThisMonthClients() {
             this.isLoadingPendingClients = true;
             this.pendingThisMonthClients = []; 
@@ -85,7 +129,15 @@ export const useClientStore = defineStore('client', {
             }
         },
 
-        // --- NOVA AÇÃO: Reverter ---
+        /**
+         * Reverte uma ação do log (desfazer)
+         * Restaura o cliente ao estado anterior à ação registrada
+         * @async
+         * @param {number} logId - ID do log de ação a reverter
+         * @returns {Promise<boolean>} True se reversão bem-sucedida
+         * @example
+         * await clientStore.revertAction(123)
+         */
         async revertAction(logId) {
           const notificationStore = useNotificationStore();
             try {
@@ -106,8 +158,13 @@ export const useClientStore = defineStore('client', {
                 return false; // Indica falha
             }
         },
-        // --- FIM DA NOVA AÇÃO ---
 
+        /**
+         * Busca log das ações recentes realizadas nos clientes
+         * Exibe últimas 50 ações (edições, mudanças de status, ajustes de data)
+         * @async
+         * @returns {Promise<void>}
+         */
         async fetchRecentActions() {
             this.isLoadingActions = true;
             try {
@@ -120,6 +177,11 @@ export const useClientStore = defineStore('client', {
             }
         },
 
+        /**
+         * Busca distribuição de clientes por serviço para gráfico de barras
+         * @async
+         * @returns {Promise<void>}
+         */
         async fetchServiceDistribution() {
           try {
             const response = await apiClient.get('/clientes/stats/by-service');
@@ -144,6 +206,12 @@ export const useClientStore = defineStore('client', {
             this.serviceDistributionData = { labels: [], datasets: [] };
           }
         },
+
+        /**
+         * Busca lista de serviços disponíveis para select de formulários
+         * @async
+         * @returns {Promise<void>}
+         */
         async fetchServicos() {
           try {
             const response = await apiClient.get('/servicos');
@@ -154,7 +222,14 @@ export const useClientStore = defineStore('client', {
           }
         },
 
-        // Ação para adicionar um novo serviço (para o modal de gerenciamento)
+        /**
+         * Adiciona um novo serviço ao sistema
+         * @async
+         * @param {string} nomeServico - Nome do novo serviço
+         * @returns {Promise<boolean>} True se sucesso, false se falha
+         * @example
+         * await clientStore.addServico('Hospedagem VPS')
+         */
         async addServico(nomeServico) {
           const notificationStore = useNotificationStore();
           try {
@@ -171,7 +246,14 @@ export const useClientStore = defineStore('client', {
           }
         },
 
-        // --- NOVA AÇÃO DELETE ---
+        /**
+         * Exclui um serviço do sistema
+         * @async
+         * @param {number} serviceId - ID do serviço a excluir
+         * @returns {Promise<boolean>} True se sucesso, false se falha
+         * @example
+         * await clientStore.deleteServico(5)
+         */
         async deleteServico(serviceId) {
           const notificationStore = useNotificationStore();
           try {
@@ -188,7 +270,14 @@ export const useClientStore = defineStore('client', {
           }
         },
 
-        // Substitui fetchClients() e parte de updateData()
+        /**
+         * Busca lista de clientes com paginação, filtros e busca
+         * Action principal para popular a tabela de clientes
+         * @async
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.fetchClients() // Usa filtros atuais do state
+         */
         async fetchClients() {
             this.isLoading = true;
             try {
@@ -217,9 +306,18 @@ export const useClientStore = defineStore('client', {
             } finally {
                 this.isLoading = false; // <-- 3. ADICIONE ESTA LINHA (dentro de um finally)
             }
-            
+
         },
 
+        /**
+         * Handler para eventos de atualização da v-data-table-server
+         * Atualiza paginação e recarrega dados
+         * @param {Object} options - Opções da tabela
+         * @param {number} options.page - Página atual
+         * @param {number} options.itemsPerPage - Itens por página (-1 para "All")
+         * @param {Array} options.sortBy - Array de ordenação
+         * @returns {void}
+         */
             handleTableUpdate({ page, itemsPerPage, sortBy }) {
             this.currentPage = page;
             this.limit = itemsPerPage;
@@ -241,9 +339,13 @@ export const useClientStore = defineStore('client', {
 
             this.fetchClients();
         },
-        
 
-        // Substitui updateDashboardCounts()
+        /**
+         * Busca estatísticas do dashboard
+         * Retorna custos, lucros, previsões e contagens de clientes por status
+         * @async
+         * @returns {Promise<void>}
+         */
         async fetchStats() {
             try {
                 const response = await apiClient.get('/clientes/dashboard-stats');
@@ -266,7 +368,12 @@ export const useClientStore = defineStore('client', {
             }
         },
 
-        // Substitui renderChart()
+        /**
+         * Busca dados para o gráfico de previsão de pagamentos
+         * Retorna próximos 30 dias com valores previstos
+         * @async
+         * @returns {Promise<void>}
+         */
         async fetchChartData() {
             try {
                 // Chama a rota GET /clientes/pagamentos/dias
@@ -284,7 +391,15 @@ export const useClientStore = defineStore('client', {
             }
         },
 
-        // Substitui as ações do dropdown
+        /**
+         * Atualiza o status de um cliente
+         * @async
+         * @param {number} id - ID do cliente
+         * @param {'pending'|'paid'|'in-day'} statusAction - Novo status
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.updateClientStatus(123, 'paid')
+         */
         async updateClientStatus(id, statusAction) {
           const notificationStore = useNotificationStore();
             // statusAction deve ser 'pending', 'paid', ou 'in-day'
@@ -300,7 +415,17 @@ export const useClientStore = defineStore('client', {
             }
         },
 
-        // Substitui adjustDate()
+        /**
+         * Ajusta a data de vencimento de um cliente
+         * @async
+         * @param {number} id - ID do cliente
+         * @param {number} value - Valor a ajustar (positivo ou negativo)
+         * @param {'DAY'|'MONTH'|'YEAR'} unit - Unidade de tempo
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.adjustClientDate(123, 1, 'MONTH') // +1 mês
+         * await clientStore.adjustClientDate(123, -7, 'DAY') // -7 dias
+         */
         async adjustClientDate(id, value, unit) {
           const notificationStore = useNotificationStore();
             try {
@@ -314,8 +439,15 @@ export const useClientStore = defineStore('client', {
                 notificationStore.error('Erro ao ajustar data do cliente.');
             }
         },
-        
-        // Substitui executeDelete()
+
+        /**
+         * Exclui um cliente permanentemente
+         * @async
+         * @param {number} id - ID do cliente a excluir
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.deleteClient(123)
+         */
         async deleteClient(id) {
           const notificationStore = useNotificationStore();
             try {
@@ -330,7 +462,13 @@ export const useClientStore = defineStore('client', {
             }
         },
 
-        // Ações de paginação
+        /**
+         * Navega para uma página específica da tabela
+         * @param {number} page - Número da página (1-indexed)
+         * @returns {void}
+         * @example
+         * clientStore.setPage(2)
+         */
         setPage(page) {
             if (page > 0 && page <= this.totalPages) {
                 this.currentPage = page;
@@ -338,15 +476,28 @@ export const useClientStore = defineStore('client', {
             }
         },
 
-        // Ação de filtro
+        /**
+         * Define filtro de status e recarrega clientes
+         * @param {string} status - Filtro de status ('vence3', 'pending', 'paid', etc)
+         * @returns {void}
+         * @example
+         * clientStore.setFilter('vence3')
+         */
         setFilter(status) {
             this.statusFilter = status;
             this.searchQuery = ''; // Limpa a busca
             this.currentPage = 1; // Reseta a página
             this.fetchClients();
         },
-        
-        // Ação de pesquisa
+
+        /**
+         * Define termo de busca e recarrega clientes
+         * Deve ser usado com debounce no componente
+         * @param {string} query - Termo de busca
+         * @returns {void}
+         * @example
+         * clientStore.setSearch('João Silva')
+         */
         setSearch(query) {
             this.searchQuery = query;
             this.statusFilter = ''; // Limpa o filtro de status
@@ -354,8 +505,28 @@ export const useClientStore = defineStore('client', {
             this.fetchClients(); // Idealmente com "debounce"
         },
 
-        // --- Funções do Modal (Agora Corretamente Dentro de 'actions') ---
-
+        /**
+         * Adiciona um novo cliente ao sistema
+         * @async
+         * @param {Object} clientData - Dados do cliente
+         * @param {string} clientData.name - Nome do cliente
+         * @param {string} clientData.whatsapp - WhatsApp do cliente
+         * @param {string} clientData.vencimento - Data de vencimento (YYYY-MM-DD)
+         * @param {string} clientData.servico - Nome do serviço
+         * @param {number} clientData.valor_cobrado - Valor cobrado
+         * @param {number} clientData.custo - Custo
+         * @param {string} [clientData.observacoes] - Observações opcionais
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.addClient({
+         *   name: 'João Silva',
+         *   whatsapp: '+5511987654321',
+         *   vencimento: '2025-12-01',
+         *   servico: 'Hosting',
+         *   valor_cobrado: 50.00,
+         *   custo: 30.00
+         * })
+         */
         async addClient(clientData) {
           const notificationStore = useNotificationStore();
           try {
@@ -369,6 +540,12 @@ export const useClientStore = defineStore('client', {
           }
         },
 
+        /**
+         * Busca mensagem padrão de WhatsApp (padrão ou vencido)
+         * @async
+         * @param {'default'|'vencido'} [type='default'] - Tipo de mensagem
+         * @returns {Promise<string>} Texto da mensagem ou string vazia
+         */
         async fetchMessage(type = 'default') {
           try {
             const endpoint = type === 'vencido' ? '/clientes/get-message-vencido' : '/clientes/get-message';
@@ -379,6 +556,13 @@ export const useClientStore = defineStore('client', {
           }
         },
 
+        /**
+         * Salva mensagem padrão de WhatsApp
+         * @async
+         * @param {string} message - Texto da mensagem
+         * @param {'default'|'vencido'} [type='default'] - Tipo de mensagem
+         * @returns {Promise<void>}
+         */
         async saveMessage(message, type = 'default') {
           const notificationStore = useNotificationStore();
           try {
@@ -390,7 +574,15 @@ export const useClientStore = defineStore('client', {
           }
         },
 
-        // Ação para o formulário de edição
+        /**
+         * Atualiza dados de um cliente existente
+         * @async
+         * @param {number} clientId - ID do cliente
+         * @param {Object} clientData - Novos dados do cliente (mesma estrutura de addClient)
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.updateClient(123, { name: 'João Silva Jr.', valor_cobrado: 60.00 })
+         */
         async updateClient(clientId, clientData) {
           const notificationStore = useNotificationStore();
           try {
