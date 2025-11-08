@@ -30,13 +30,9 @@ export const useAuthStore = defineStore('auth', {
         /** @type {string|null} Token JWT armazenado em sessionStorage */
         token: sessionStorage.getItem('token') || null,
         /** @type {string|null} Access token (15 minutos) */
-
         accessToken: sessionStorage.getItem('accessToken') || null,
-
         /** @type {string|null} Refresh token (7 dias) */
-
         refreshToken: sessionStorage.getItem('refreshToken') || null,
-
         /** @type {string|null} Timestamp de expiração do token (15 minutos após login) */
         tokenExpiry: sessionStorage.getItem('tokenExpiry') || null,
     }),
@@ -91,46 +87,25 @@ export const useAuthStore = defineStore('auth', {
                 });
 
                 // Validar resposta (novo formato: accessToken + refreshToken)
-
                 if (!response.data || !response.data.accessToken) {
-
                     throw new Error('Resposta inválida do servidor');
-
                 }
 
- 
-
                 // Armazena ambos os tokens
-
                 this.accessToken = response.data.accessToken;
-
                 this.refreshToken = response.data.refreshToken;
-
                 // Mantém compatibilidade com código legado
-
                 this.token = response.data.accessToken;
 
- 
-
                 // Definir expiração (15 minutos conforme backend)
-
                 const expiry = Date.now() + (15 * 60 * 1000);
-
                 this.tokenExpiry = expiry.toString();
 
- 
-
                 // Usar sessionStorage ao invés de localStorage
-
                 sessionStorage.setItem('accessToken', response.data.accessToken);
-
                 sessionStorage.setItem('refreshToken', response.data.refreshToken);
-
                 sessionStorage.setItem('token', response.data.accessToken); // Compatibilidade
-
                 sessionStorage.setItem('tokenExpiry', expiry.toString());
-
- 
 
                 logger.info('Login bem-sucedido');
 
@@ -196,21 +171,13 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.token = null;
             this.accessToken = null;
-
             this.refreshToken = null;
-
             this.tokenExpiry = null;
-
             sessionStorage.removeItem('token');
-
             sessionStorage.removeItem('accessToken');
-
             sessionStorage.removeItem('refreshToken');
-
             sessionStorage.removeItem('tokenExpiry');
-
             router.push('/login');
-
         },
 
         /**
