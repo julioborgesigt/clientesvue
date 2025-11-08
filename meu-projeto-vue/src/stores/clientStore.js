@@ -57,7 +57,6 @@ export const useClientStore = defineStore('client', {
                 notificationStore.success(response.data.message || 'Serviço atualizado com sucesso!');
                 return true; // Indica sucesso
             } catch (error) {
-                console.error('Erro ao editar serviço:', error);
                 notificationStore.error(error.response?.data?.error || 'Erro ao editar serviço.');
                 return false; // Indica falha
             }
@@ -78,13 +77,10 @@ export const useClientStore = defineStore('client', {
                 }));
                 // --- FIM DA CORREÇÃO ---
 
-                console.log('clientStore: API /pending-this-month SUCESSO. Dados:', formattedClients); 
-                
                 this.pendingThisMonthClients = formattedClients; // Salva os dados formatados
             } catch (error) {
-                console.error('clientStore: ERRO ao buscar /pending-this-month:', error); 
+                // Erro silencioso - não há necessidade de notificar o usuário
             } finally {
-                console.log('clientStore: fetchPendingThisMonthClients FINALIZADA.'); 
                 this.isLoadingPendingClients = false;
             }
         },
@@ -104,10 +100,9 @@ export const useClientStore = defineStore('client', {
 
                 return true; // Indica sucesso
             } catch (error) {
-                console.error(`Erro ao reverter ação ID ${logId}:`, error);
                 notificationStore.error(error.response?.data?.error || 'Erro ao reverter ação.');
                 // Atualiza o log mesmo em caso de erro (pode ter sido marcado como revertido)
-                await this.fetchRecentActions(); 
+                await this.fetchRecentActions();
                 return false; // Indica falha
             }
         },
@@ -119,7 +114,6 @@ export const useClientStore = defineStore('client', {
                 const response = await apiClient.get('/clientes/actions/recent'); // Chama a nova rota
                 this.recentActions = response.data;
             } catch (error) {
-                console.error('Erro ao buscar ações recentes:', error);
                 this.recentActions = []; // Limpa em caso de erro
             } finally {
                 this.isLoadingActions = false;
@@ -146,19 +140,17 @@ export const useClientStore = defineStore('client', {
               ]
             };
           } catch (error) {
-            console.error('Erro ao buscar distribuição por serviço:', error);
             // Zera os dados em caso de erro para não mostrar gráfico antigo
-            this.serviceDistributionData = { labels: [], datasets: [] }; 
+            this.serviceDistributionData = { labels: [], datasets: [] };
           }
         },
         async fetchServicos() {
           try {
             const response = await apiClient.get('/servicos');
             // Armazena a lista no estado. O v-select precisa de { id, nome }
-            this.servicos = response.data; 
+            this.servicos = response.data;
           } catch (error) {
-            console.error('Erro ao buscar serviços:', error);
-            // Poderia adicionar tratamento de erro aqui (ex: mostrar notificação)
+            // Erro silencioso - componente exibirá lista vazia
           }
         },
 
@@ -174,7 +166,6 @@ export const useClientStore = defineStore('client', {
             notificationStore.success('Serviço adicionado com sucesso!');
             return true; // Indica sucesso
           } catch (error) {
-            console.error('Erro ao adicionar serviço:', error);
             notificationStore.error(error.response?.data?.error || 'Erro ao adicionar serviço.');
             return false; // Indica falha
           }
@@ -192,7 +183,6 @@ export const useClientStore = defineStore('client', {
             // você pode querer resetar esse campo aqui ou no componente.
             return true; // Indica sucesso
           } catch (error) {
-            console.error('Erro ao excluir serviço:', error);
             notificationStore.error(error.response?.data?.error || 'Erro ao excluir serviço.');
             return false; // Indica falha
           }
@@ -221,9 +211,9 @@ export const useClientStore = defineStore('client', {
 
                 this.clients = formattedClients; // Salva a lista formatada
                 this.totalClients = response.data.total;
-                
+
             } catch (error) {
-                console.error('Erro ao buscar clientes:', error);
+                // Erro silencioso - tabela exibirá lista vazia
             } finally {
                 this.isLoading = false; // <-- 3. ADICIONE ESTA LINHA (dentro de um finally)
             }
@@ -272,7 +262,7 @@ export const useClientStore = defineStore('client', {
                     emdias: parseInt(data.emdias) || 0,
                 };
             } catch (error) {
-                console.error('Erro ao buscar estatísticas:', error);
+                // Erro silencioso - stats permanecerão vazias
             }
         },
 
@@ -290,7 +280,7 @@ export const useClientStore = defineStore('client', {
                     }]
                 };
             } catch (error) {
-                console.error('Erro ao buscar dados do gráfico:', error);
+                // Erro silencioso - gráfico não será exibido
             }
         },
 
@@ -306,7 +296,6 @@ export const useClientStore = defineStore('client', {
                 this.fetchStats(); // Atualiza os cards
                 this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
-                console.error('Erro ao atualizar status:', error);
                 notificationStore.error('Erro ao atualizar status do cliente.');
             }
         },
@@ -318,11 +307,10 @@ export const useClientStore = defineStore('client', {
                 // Chama PUT /clientes/adjust-date/:id
                 await apiClient.put(`/clientes/adjust-date/${id}`, { value, unit });
                 notificationStore.success('Data do cliente ajustada com sucesso!');
-                this.fetchClients(); 
+                this.fetchClients();
                 this.fetchStats();
                 this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
-                console.error('Erro ao ajustar data:', error);
                 notificationStore.error('Erro ao ajustar data do cliente.');
             }
         },
@@ -338,7 +326,6 @@ export const useClientStore = defineStore('client', {
                 this.fetchStats();
                 this.fetchRecentActions(); // <-- Recarrega o log
             } catch (error) {
-                console.error('Erro ao deletar cliente:', error);
                 notificationStore.error('Erro ao deletar cliente.');
             }
         },
@@ -378,7 +365,6 @@ export const useClientStore = defineStore('client', {
             this.fetchStats();
             this.fetchRecentActions(); // <-- Recarrega o log
           } catch (error) {
-            console.error('Erro ao adicionar cliente:', error);
             notificationStore.error('Erro ao adicionar cliente.');
           }
         },
@@ -389,7 +375,6 @@ export const useClientStore = defineStore('client', {
             const response = await apiClient.get(endpoint);
             return response.data.message || '';
           } catch (error) {
-            console.error('Erro ao buscar mensagem:', error);
             return '';
           }
         },
@@ -401,7 +386,6 @@ export const useClientStore = defineStore('client', {
             const response = await apiClient.post(endpoint, { message });
             notificationStore.success(response.data.message);
           } catch (error) {
-            console.error('Erro ao salvar mensagem:', error);
             notificationStore.error('Erro ao salvar mensagem.');
           }
         },
@@ -415,7 +399,6 @@ export const useClientStore = defineStore('client', {
             this.fetchClients(); // Atualiza a tabela
             this.fetchRecentActions();
           } catch (error) {
-            console.error('Erro ao atualizar cliente:', error);
             notificationStore.error('Erro ao atualizar cliente.');
           }
         }

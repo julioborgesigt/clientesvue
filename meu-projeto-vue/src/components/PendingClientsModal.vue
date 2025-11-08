@@ -12,7 +12,7 @@
       </v-card-title>
       
       <v-card-subtitle class="ps-4 pb-2">
-         Clientes com vencimento no mês atual e status diferente de 'Pag. em dias'. Total: R$ {{ totalValue.toFixed(2) }}
+         Clientes com vencimento no mês atual e status diferente de 'Pag. em dias'. Total: {{ formatCurrency(totalValue) }}
       </v-card-subtitle>
 
       <v-card-text class="pa-4 pt-2">
@@ -37,7 +37,7 @@
               <td>{{ client.id }}</td>
               <td>{{ client.name }}</td>
               <td>{{ formatDate(client.vencimento) }}</td>
-              <td class="text-right">{{ client.valor_cobrado.toFixed(2) }}</td>
+              <td class="text-right">{{ formatCurrency(client.valor_cobrado) }}</td>
               <td>
                  <v-chip :color="getStatusColor(client.status)" size="x-small" label>
                   {{ client.status }}
@@ -48,7 +48,7 @@
            <tfoot>
              <tr>
                <td colspan="3" class="text-right font-weight-bold">Total:</td>
-               <td class="text-right font-weight-bold">{{ totalValue.toFixed(2) }}</td>
+               <td class="text-right font-weight-bold">{{ formatCurrency(totalValue) }}</td>
                <td></td>
              </tr>
            </tfoot>
@@ -66,7 +66,11 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
+import { formatDate } from '@/utils/dateUtils';
+import { formatCurrency } from '@/utils/formatters';
+import { getStatusColor } from '@/utils/statusUtils';
+import { sanitizeNumber } from '@/utils/sanitize';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -77,43 +81,15 @@ const props = defineProps({
   }
 });
 
-// LOG 8: Quais props o modal está recebendo?
-console.log('PendingClientsModal: Props recebidas ->', 
-    'isOpen:', props.isOpen, 
-    'isLoading:', props.isLoading, 
-    'clients:', props.clients
-);
-
-// Adiciona um watcher para logar mudanças nas props (ajuda a depurar)
-watch(props, (newProps) => {
-  console.log('PendingClientsModal: Props ATUALIZADAS ->', 
-    'isOpen:', newProps.isOpen, 
-    'isLoading:', newProps.isLoading, 
-    'clients:', newProps.clients
-  );
-}, { immediate: true, deep: true }); // immediate: true loga o valor inicial também
-
 defineEmits(['close']);
 
-// Calcula o valor total da lista exibida
+// Calcula o valor total da lista exibida com sanitização
 const totalValue = computed(() => {
-  return props.clients.reduce((sum, client) => sum + client.valor_cobrado, 0);
+  return props.clients.reduce((sum, client) => {
+    const valor = sanitizeNumber(client.valor_cobrado);
+    return sum + valor;
+  }, 0);
 });
-
-// Funções helper (copiadas/adaptadas de ClientTable.vue)
-const getStatusColor = (status) => {
-  if (status === 'Não pagou') return 'red-darken-1';
-  if (status === 'cobrança feita') return 'orange-darken-1';
-  // Adicione outras cores se houver mais status
-  return 'grey';
-};
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  const parts = dateString.split('-');
-  if (parts.length < 3) return dateString;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
-};
 </script>
 
 <style scoped>

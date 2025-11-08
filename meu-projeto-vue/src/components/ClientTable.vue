@@ -28,8 +28,8 @@
       hover
       @update:options="clientStore.handleTableUpdate"
     >
-      <template v-slot:item.valor_cobrado="{ value }"> R$ {{ value.toFixed(2) }} </template>
-      <template v-slot:item.custo="{ value }"> R$ {{ value.toFixed(2) }} </template>
+      <template v-slot:item.valor_cobrado="{ value }"> {{ formatCurrency(value) }} </template>
+      <template v-slot:item.custo="{ value }"> {{ formatCurrency(value) }} </template>
       <template v-slot:item.status="{ value }"> <v-chip :color="getStatusColor(value)" size="small"> {{ value }} </v-chip> </template>
       <template v-slot:item.vencimento="{ value }"> {{ formatDate(value) }} </template>
 
@@ -103,8 +103,14 @@
 <script setup>
 import { ref, watch, onUnmounted } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { formatDate } from '@/utils/dateUtils';
+import { formatCurrency } from '@/utils/formatters';
+import { getStatusColor } from '@/utils/statusUtils';
+import { sanitizeForURL, sanitizePhone } from '@/utils/sanitize';
+
 const clientStore = useClientStore();
+const notificationStore = useNotificationStore();
 const emit = defineEmits(['open-edit-modal']);
 const search = ref('');
 const itemsPerPage = ref(10); 
@@ -133,34 +139,45 @@ const handleAction = (action, client) => {
   if (action === 'edit') { emit('open-edit-modal', client); } 
   else if (action === 'whatsapp' || action === 'whatsapp-vencido') {
     const type = action === 'whatsapp-vencido' ? 'vencido' : 'default';
-    sendWhatsAppMessage(client, type); 
-  } else { console.log('Ação desconhecida:', action, client.name); }
+    sendWhatsAppMessage(client, type);
+  }
 };
 async function sendWhatsAppMessage(client, messageType = 'default') {
   try {
     const message = await clientStore.fetchMessage(messageType);
     if (!message) {
-      alert(`Mensagem ${messageType === 'vencido' ? '(Vencido)' : 'Padrão'} não configurada.`);
+      const msgType = messageType === 'vencido' ? 'Vencido' : 'Padrão';
+      notificationStore.warning(`Mensagem ${msgType} não configurada.`);
       return;
     }
-    // Corrigido: removido o +1 dia que estava causando bug
+
+    // Formatar data
     const formattedDate = formatDate(client.vencimento);
-    const fullMessage = `${message}\nVencimento: ${formattedDate}`;
-    const phone = client.whatsapp.startsWith('+') ? client.whatsapp.substring(1) : client.whatsapp;
+
+    // Sanitizar dados antes de enviar
+    const safeName = sanitizeForURL(client.name || '');
+    const safeMessage = sanitizeForURL(message);
+    const fullMessage = `${safeMessage}\nCliente: ${safeName}\nVencimento: ${formattedDate}`;
+
+    // Sanitizar telefone
+    const safePhone = sanitizePhone(client.whatsapp);
+    const phone = safePhone.startsWith('+') ? safePhone.substring(1) : safePhone;
+
+    // Validar telefone
+    if (!phone || phone.length < 10) {
+      notificationStore.error('Número de WhatsApp inválido.');
+      return;
+    }
+
     const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(fullMessage)}`;
     window.open(whatsappLink, '_blank');
   } catch (error) {
-    console.error('Erro ao enviar mensagem WhatsApp:', error);
-    alert('Erro ao preparar mensagem do WhatsApp.');
+    notificationStore.error('Erro ao preparar mensagem do WhatsApp.');
   }
 }
-const getStatusColor = (status) => {
-  if (status === 'Não pagou') return 'red-darken-1';
-  if (status === 'cobrança feita') return 'orange-darken-1';
-  if (status === 'Pag. em dias') return 'green-darken-1';
-  return 'grey';
-};
+// getStatusColor agora é importado de @/utils/statusUtils
 // formatDate agora é importado de @/utils/dateUtils
+// formatCurrency agora é importado de @/utils/formatters
 </script>
 
 <style scoped>

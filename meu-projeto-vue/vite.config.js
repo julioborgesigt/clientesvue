@@ -12,4 +12,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+
+  // Configuração de build para produção
+  build: {
+    // Remove console.log, console.warn, e console.error em produção
+    minify: 'esbuild',
+    esbuild: {
+      drop: ['console', 'debugger'],
+    },
+  },
 })
