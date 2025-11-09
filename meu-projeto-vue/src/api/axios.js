@@ -20,23 +20,41 @@ async function fetchCsrfToken() {
         // Em desenvolvimento (VITE_API_URL vazio), usa URL relativa para proxy do Vite
         const csrfUrl = baseURL ? `${baseURL}/api/csrf-token` : '/api/csrf-token';
 
-        logger.log('Buscando CSRF token de:', csrfUrl);
+        logger.log('🔐 Buscando CSRF token de:', csrfUrl);
 
         const response = await axios.get(csrfUrl, {
             withCredentials: true  // Importante para cookies
         });
 
-        if (response.data && response.data.csrfToken) {
-            csrfToken = response.data.csrfToken;
-            logger.log('CSRF token obtido com sucesso');
-            logger.log('Cookies após buscar token:', document.cookie);
+        logger.log('📥 Resposta completa:', response);
+        logger.log('📊 Status:', response.status);
+        logger.log('📦 Data:', response.data);
+        logger.log('🍪 Headers:', response.headers);
+        logger.log('🍪 Set-Cookie:', response.headers['set-cookie']);
+        logger.log('🍪 Cookies atuais do documento:', document.cookie);
+
+        // Verificar diferentes possíveis formatos de resposta
+        const token = response.data?.csrfToken || response.data?.token || response.data;
+
+        logger.log('🔑 Token extraído:', token);
+
+        if (token && typeof token === 'string') {
+            csrfToken = token;
+            logger.log('✅ CSRF token obtido com sucesso!');
             return csrfToken;
         } else {
+            logger.error('❌ Formato de resposta inesperado:', {
+                data: response.data,
+                type: typeof response.data,
+                keys: response.data ? Object.keys(response.data) : 'n/a'
+            });
             throw new Error('Token CSRF não encontrado na resposta');
         }
     } catch (error) {
-        logger.error('Erro ao buscar CSRF token:', error);
-        logger.error('Detalhes do erro:', error.response?.data);
+        logger.error('💥 Erro ao buscar CSRF token:', error);
+        logger.error('📋 Detalhes do erro:', error.response?.data);
+        logger.error('📋 Status do erro:', error.response?.status);
+        logger.error('📋 Headers do erro:', error.response?.headers);
         throw error;
     }
 }
