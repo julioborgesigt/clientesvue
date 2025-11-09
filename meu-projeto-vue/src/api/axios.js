@@ -7,121 +7,26 @@ import { logger } from '@/utils/logger';
 // Contador de requisições pendentes para debugging
 let pendingRequests = 0;
 
-// CSRF Token management
-let csrfToken = null;
-
-/**
- * Busca o CSRF token do backend
- * @returns {Promise<string>} O token CSRF
- */
-async function fetchCsrfToken() {
-    try {
-        const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev') || 'https://clientes.domcloud.dev';
-        const csrfUrl = `${baseURL}/api/csrf-token`;
-
-        logger.log('🔐 Buscando CSRF token de:', csrfUrl);
-
-        const response = await axios.get(csrfUrl, {
-            withCredentials: true  // Importante para cookies
-        });
-
-        logger.log('📥 Resposta completa:', response);
-        logger.log('📊 Status:', response.status);
-        logger.log('📦 Data:', response.data);
-        logger.log('🍪 Headers:', response.headers);
-        logger.log('🍪 Set-Cookie:', response.headers['set-cookie']);
-        logger.log('🍪 Cookies atuais do documento:', document.cookie);
-
-        // Verificar diferentes possíveis formatos de resposta
-        const token = response.data?.csrfToken || response.data?.token || response.data;
-
-        logger.log('🔑 Token extraído:', token);
-
-        if (token && typeof token === 'string') {
-            csrfToken = token;
-            logger.log('✅ CSRF token obtido com sucesso!');
-            return csrfToken;
-        } else {
-            logger.error('❌ Formato de resposta inesperado:', {
-                data: response.data,
-                type: typeof response.data,
-                keys: response.data ? Object.keys(response.data) : 'n/a'
-            });
-            throw new Error('Token CSRF não encontrado na resposta');
-        }
-    } catch (error) {
-        logger.error('💥 Erro ao buscar CSRF token:', error);
-        logger.error('📋 Detalhes do erro:', error.response?.data);
-        logger.error('📋 Status do erro:', error.response?.status);
-        logger.error('📋 Headers do erro:', error.response?.headers);
-        throw error;
-    }
-}
-
-/**
- * Inicializa o CSRF token na aplicação
- * Deve ser chamado no startup da aplicação
- */
-export async function initializeCsrf() {
-    try {
-        await fetchCsrfToken();
-    } catch (error) {
-        logger.warn('Falha ao inicializar CSRF token:', error);
-        // Não bloqueia a aplicação, tentará novamente nas requisições
-    }
-}
-
 // Configuração do axios client
-// Em desenvolvimento (VITE_API_URL vazio), usa URLs relativas com proxy do Vite
-// Em produção, usa a URL completa do backend
-const baseURLEnv = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev') || 'https://clientes.domcloud.dev';
-const baseURL = baseURLEnv;
+const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
 
-// Debug: mostrar configuração
 logger.log('=== CONFIGURAÇÃO AXIOS ===');
-logger.log('VITE_API_URL da env:', import.meta.env.VITE_API_URL);
-logger.log('baseURL calculado:', baseURL);
+logger.log('API URL:', baseURL);
 logger.log('Modo:', import.meta.env.DEV ? 'DESENVOLVIMENTO' : 'PRODUÇÃO');
 
 const apiClient = axios.create({
-    baseURL: baseURL, // Vazio para usar proxy, ou URL completa para produção
+    baseURL: baseURL,
     timeout: parseInt(getEnv('VITE_API_TIMEOUT', '30000')), // 30 segundos padrão
     headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest' // Recomendado para segurança
     },
-    withCredentials: true, // Necessário para cookies CSRF
 });
 
-// Log da configuração final
-logger.log('apiClient.defaults.baseURL:', apiClient.defaults.baseURL);
-
-// Interceptor: Adiciona o token a CADA requisição
+// Interceptor: Adiciona o token JWT a CADA requisição protegida
 apiClient.interceptors.request.use(
-    async (config) => {
+    (config) => {
         pendingRequests++;
-
-        // Adicionar CSRF token para requisições que precisam (POST, PUT, DELETE, PATCH)
-        const needsCsrf = ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase());
-
-        if (needsCsrf) {
-            // Se não tiver token CSRF, tenta buscar
-            if (!csrfToken) {
-                try {
-                    logger.log('Buscando CSRF token...');
-                    await fetchCsrfToken();
-                } catch (error) {
-                    logger.error('Falha ao obter CSRF token:', error);
-                }
-            }
-
-            // Adiciona o token CSRF no header
-            if (csrfToken) {
-                config.headers['x-csrf-token'] = csrfToken;
-                logger.log('Token CSRF adicionado à requisição');
-            } else {
-                logger.warn('CSRF token não disponível para ' + config.method + ' ' + config.url);
-            }
-        }
 
         // Adicionar Authorization token se não for rota de autenticação
         if (!config.url.startsWith('/auth')) {
@@ -130,6 +35,7 @@ apiClient.interceptors.request.use(
 
             if (token) {
                 config.headers['Authorization'] = `Bearer ${token}`;
+                logger.log('Token JWT adicionado à requisição');
             } else {
                 // Bloquear requisição se não tiver token em rotas protegidas
                 pendingRequests--;
@@ -158,7 +64,7 @@ apiClient.interceptors.response.use(
 
         return response;
     },
-    async (error) => {
+    (error) => {
         pendingRequests--;
 
         // Tratamento de erros melhorado
@@ -174,20 +80,7 @@ apiClient.interceptors.response.use(
                     break;
 
                 case 403:
-                    // Pode ser token CSRF inválido
-                    const errorMessage = error.response.data?.message || '';
-                    if (errorMessage.includes('CSRF') || errorMessage.includes('csrf')) {
-                        logger.warn('Token CSRF inválido, tentando renovar');
-                        // Tenta buscar novo token CSRF
-                        try {
-                            await fetchCsrfToken();
-                            // Pode-se tentar reenviar a requisição aqui se necessário
-                        } catch (csrfError) {
-                            logger.error('Falha ao renovar token CSRF');
-                        }
-                    } else {
-                        logger.error('Acesso negado');
-                    }
+                    logger.error('Acesso negado');
                     break;
 
                 case 404:
@@ -228,3 +121,4 @@ apiClient.interceptors.response.use(
 export const hasPendingRequests = () => pendingRequests > 0;
 
 export default apiClient;
+

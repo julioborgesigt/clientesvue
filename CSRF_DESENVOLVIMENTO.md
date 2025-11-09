@@ -1,4 +1,12 @@
-# 🔒 Problema com CSRF em Desenvolvimento (Cross-Domain)
+# ⚠️ DOCUMENTO OBSOLETO - CSRF REMOVIDO
+
+**Este documento está DESATUALIZADO.** O sistema CSRF foi completamente removido do frontend.
+
+**📄 Leia o documento atualizado:** `FRONTEND_SEM_CSRF.md`
+
+---
+
+# 🔒 [OBSOLETO] Problema com CSRF em Desenvolvimento (Cross-Domain)
 
 ## ❌ Problema Atual
 
