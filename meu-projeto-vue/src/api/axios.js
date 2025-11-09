@@ -16,9 +16,8 @@ let csrfToken = null;
  */
 async function fetchCsrfToken() {
     try {
-        const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
-        // Em desenvolvimento (VITE_API_URL vazio), usa URL relativa para proxy do Vite
-        const csrfUrl = baseURL ? `${baseURL}/api/csrf-token` : '/api/csrf-token';
+        const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev') || 'https://clientes.domcloud.dev';
+        const csrfUrl = `${baseURL}/api/csrf-token`;
 
         logger.log('🔐 Buscando CSRF token de:', csrfUrl);
 
@@ -75,8 +74,8 @@ export async function initializeCsrf() {
 // Configuração do axios client
 // Em desenvolvimento (VITE_API_URL vazio), usa URLs relativas com proxy do Vite
 // Em produção, usa a URL completa do backend
-const baseURLEnv = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
-const baseURL = baseURLEnv === '' ? '' : baseURLEnv;
+const baseURLEnv = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev') || 'https://clientes.domcloud.dev';
+const baseURL = baseURLEnv;
 
 // Debug: mostrar configuração
 logger.log('=== CONFIGURAÇÃO AXIOS ===');
