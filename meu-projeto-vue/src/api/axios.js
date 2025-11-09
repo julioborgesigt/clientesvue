@@ -17,19 +17,26 @@ let csrfToken = null;
 async function fetchCsrfToken() {
     try {
         const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
-        const response = await axios.get(`${baseURL}/api/csrf-token`, {
+        // Em desenvolvimento (VITE_API_URL vazio), usa URL relativa para proxy do Vite
+        const csrfUrl = baseURL ? `${baseURL}/api/csrf-token` : '/api/csrf-token';
+
+        logger.log('Buscando CSRF token de:', csrfUrl);
+
+        const response = await axios.get(csrfUrl, {
             withCredentials: true  // Importante para cookies
         });
 
         if (response.data && response.data.csrfToken) {
             csrfToken = response.data.csrfToken;
             logger.log('CSRF token obtido com sucesso');
+            logger.log('Cookies após buscar token:', document.cookie);
             return csrfToken;
         } else {
             throw new Error('Token CSRF não encontrado na resposta');
         }
     } catch (error) {
         logger.error('Erro ao buscar CSRF token:', error);
+        logger.error('Detalhes do erro:', error.response?.data);
         throw error;
     }
 }
@@ -47,8 +54,13 @@ export async function initializeCsrf() {
     }
 }
 
+// Configuração do axios client
+// Em desenvolvimento (VITE_API_URL vazio), usa URLs relativas com proxy do Vite
+// Em produção, usa a URL completa do backend
+const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
+
 const apiClient = axios.create({
-    baseURL: getEnv('VITE_API_URL', 'https://clientes.domcloud.dev'),
+    baseURL: baseURL || '', // Se vazio, usa URLs relativas
     timeout: parseInt(getEnv('VITE_API_TIMEOUT', '30000')), // 30 segundos padrão
     headers: {
         'Content-Type': 'application/json',
@@ -68,15 +80,19 @@ apiClient.interceptors.request.use(
             // Se não tiver token CSRF, tenta buscar
             if (!csrfToken) {
                 try {
+                    logger.log('Buscando CSRF token...');
                     await fetchCsrfToken();
                 } catch (error) {
-                    logger.error('Falha ao obter CSRF token para requisição');
+                    logger.error('Falha ao obter CSRF token:', error);
                 }
             }
 
             // Adiciona o token CSRF no header
             if (csrfToken) {
                 config.headers['x-csrf-token'] = csrfToken;
+                logger.log('Token CSRF adicionado à requisição');
+            } else {
+                logger.warn('CSRF token não disponível para ' + config.method + ' ' + config.url);
             }
         }
 
