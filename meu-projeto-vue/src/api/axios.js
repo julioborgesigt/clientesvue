@@ -6,30 +6,45 @@ import { logger } from '@/utils/logger';
 
 // Contador de requisições pendentes para debugging
 let pendingRequests = 0;
-// CSRF Token management - NOVO
 
+// CSRF Token management
 let csrfToken = null;
 
+/**
+ * Busca o CSRF token do backend
+ * @returns {Promise<string>} O token CSRF
+ */
 async function fetchCsrfToken() {
+    try {
+        const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
+        const response = await axios.get(`${baseURL}/api/csrf-token`, {
+            withCredentials: true  // Importante para cookies
+        });
 
-    const response = await axios.get('/api/csrf-token', {
-
-        withCredentials: true  // ✅ Importante para cookies
-
-    });
-
-    csrfToken = response.data.csrfToken;
-
+        if (response.data && response.data.csrfToken) {
+            csrfToken = response.data.csrfToken;
+            logger.log('CSRF token obtido com sucesso');
+            return csrfToken;
+        } else {
+            throw new Error('Token CSRF não encontrado na resposta');
+        }
+    } catch (error) {
+        logger.error('Erro ao buscar CSRF token:', error);
+        throw error;
+    }
 }
 
- 
-
-// Interceptor adiciona CSRF automaticamente
-
-if (needsCsrf && csrfToken) {
-
-    config.headers['x-csrf-token'] = csrfToken;  // ✅
-
+/**
+ * Inicializa o CSRF token na aplicação
+ * Deve ser chamado no startup da aplicação
+ */
+export async function initializeCsrf() {
+    try {
+        await fetchCsrfToken();
+    } catch (error) {
+        logger.warn('Falha ao inicializar CSRF token:', error);
+        // Não bloqueia a aplicação, tentará novamente nas requisições
+    }
 }
 
 const apiClient = axios.create({
@@ -38,14 +53,34 @@ const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // Necessário para cookies CSRF
 });
 
 // Interceptor: Adiciona o token a CADA requisição
 apiClient.interceptors.request.use(
-    (config) => {
+    async (config) => {
         pendingRequests++;
 
-        // Só adicione o token se a rota não for de autenticação
+        // Adicionar CSRF token para requisições que precisam (POST, PUT, DELETE, PATCH)
+        const needsCsrf = ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase());
+
+        if (needsCsrf) {
+            // Se não tiver token CSRF, tenta buscar
+            if (!csrfToken) {
+                try {
+                    await fetchCsrfToken();
+                } catch (error) {
+                    logger.error('Falha ao obter CSRF token para requisição');
+                }
+            }
+
+            // Adiciona o token CSRF no header
+            if (csrfToken) {
+                config.headers['x-csrf-token'] = csrfToken;
+            }
+        }
+
+        // Adicionar Authorization token se não for rota de autenticação
         if (!config.url.startsWith('/auth')) {
             const authStore = useAuthStore();
             const token = authStore.token;
@@ -80,7 +115,7 @@ apiClient.interceptors.response.use(
 
         return response;
     },
-    (error) => {
+    async (error) => {
         pendingRequests--;
 
         // Tratamento de erros melhorado
@@ -96,7 +131,20 @@ apiClient.interceptors.response.use(
                     break;
 
                 case 403:
-                    logger.error('Acesso negado');
+                    // Pode ser token CSRF inválido
+                    const errorMessage = error.response.data?.message || '';
+                    if (errorMessage.includes('CSRF') || errorMessage.includes('csrf')) {
+                        logger.warn('Token CSRF inválido, tentando renovar');
+                        // Tenta buscar novo token CSRF
+                        try {
+                            await fetchCsrfToken();
+                            // Pode-se tentar reenviar a requisição aqui se necessário
+                        } catch (csrfError) {
+                            logger.error('Falha ao renovar token CSRF');
+                        }
+                    } else {
+                        logger.error('Acesso negado');
+                    }
                     break;
 
                 case 404:
