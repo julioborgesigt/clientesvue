@@ -107,7 +107,11 @@ export const useAuthStore = defineStore('auth', {
                 sessionStorage.setItem('token', response.data.accessToken); // Compatibilidade
                 sessionStorage.setItem('tokenExpiry', expiry.toString());
 
-                logger.log('Login bem-sucedido');
+                logger.log('Login bem-sucedido');  // ✅ Era logger.info()
+
+                this.accessToken = response.data.accessToken;  // ✅
+                
+                this.refreshToken = response.data.refreshToken;  // ✅
 
                 // Redireciona para o dashboard
                 router.push('/dashboard');
