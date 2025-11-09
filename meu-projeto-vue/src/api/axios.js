@@ -57,16 +57,26 @@ export async function initializeCsrf() {
 // Configuração do axios client
 // Em desenvolvimento (VITE_API_URL vazio), usa URLs relativas com proxy do Vite
 // Em produção, usa a URL completa do backend
-const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
+const baseURLEnv = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
+const baseURL = baseURLEnv === '' ? '' : baseURLEnv;
+
+// Debug: mostrar configuração
+logger.log('=== CONFIGURAÇÃO AXIOS ===');
+logger.log('VITE_API_URL da env:', import.meta.env.VITE_API_URL);
+logger.log('baseURL calculado:', baseURL);
+logger.log('Modo:', import.meta.env.DEV ? 'DESENVOLVIMENTO' : 'PRODUÇÃO');
 
 const apiClient = axios.create({
-    baseURL: baseURL || '', // Se vazio, usa URLs relativas
+    baseURL: baseURL, // Vazio para usar proxy, ou URL completa para produção
     timeout: parseInt(getEnv('VITE_API_TIMEOUT', '30000')), // 30 segundos padrão
     headers: {
         'Content-Type': 'application/json',
     },
     withCredentials: true, // Necessário para cookies CSRF
 });
+
+// Log da configuração final
+logger.log('apiClient.defaults.baseURL:', apiClient.defaults.baseURL);
 
 // Interceptor: Adiciona o token a CADA requisição
 apiClient.interceptors.request.use(
