@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import { createPinia } from 'pinia'
+import { initializeCsrf } from './api/axios'
 
 // --- Configuração do Vuetify com Tree-Shaking ---
 import 'vuetify/styles'
@@ -184,5 +185,10 @@ app.config.warnHandler = (msg, instance, trace) => {
     console.warn('[Vue Warning]', msg, trace);
   }
 };
+
+// Inicializar CSRF token
+initializeCsrf().catch(err => {
+  console.warn('Falha ao inicializar CSRF token:', err);
+});
 
 app.mount('#app')
