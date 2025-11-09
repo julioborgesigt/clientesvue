@@ -6,6 +6,31 @@ import { logger } from '@/utils/logger';
 
 // Contador de requisições pendentes para debugging
 let pendingRequests = 0;
+// CSRF Token management - NOVO
+
+let csrfToken = null;
+
+async function fetchCsrfToken() {
+
+    const response = await axios.get('/api/csrf-token', {
+
+        withCredentials: true  // ✅ Importante para cookies
+
+    });
+
+    csrfToken = response.data.csrfToken;
+
+}
+
+ 
+
+// Interceptor adiciona CSRF automaticamente
+
+if (needsCsrf && csrfToken) {
+
+    config.headers['x-csrf-token'] = csrfToken;  // ✅
+
+}
 
 const apiClient = axios.create({
     baseURL: getEnv('VITE_API_URL', 'https://clientes.domcloud.dev'),
