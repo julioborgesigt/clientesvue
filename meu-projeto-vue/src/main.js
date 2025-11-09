@@ -55,6 +55,15 @@ import {
 // Diretivas (importar apenas as necessárias)
 import { Ripple } from 'vuetify/directives' 
 
+// Inicializa CSRF token no startup - NOVO
+import { initializeCsrf } from './api/axios';
+
+initializeCsrf().catch(err => {
+
+    console.warn('Failed to initialize CSRF token');
+
+});
+
 // Definição do Tema Claro (Light)
 const lightTheme = {
   dark: false,
