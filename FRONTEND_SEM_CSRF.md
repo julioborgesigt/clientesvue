@@ -1,8 +1,18 @@
-# ✅ Frontend Atualizado - Removido Sistema CSRF
+# ⚠️ DOCUMENTO OBSOLETO - CSRF FOI REATIVADO
 
-## 📋 Mudanças Realizadas
+**Este documento está DESATUALIZADO.** O sistema CSRF foi restaurado no frontend para alinhar com o backend.
+
+**📄 Leia o documento atualizado:** `CSRF_ATIVADO.md`
+
+---
+
+# ✅ [HISTÓRICO] Frontend Atualizado - Removido Sistema CSRF
+
+## 📋 Mudanças Realizadas (REVERTIDAS)
 
 O frontend foi atualizado para **remover completamente o sistema CSRF**, alinhando-se com a arquitetura do backend que usa **JWT em headers**.
+
+**NOTA:** Esta mudança foi posteriormente revertida quando o backend reativou a proteção CSRF.
 
 ### Por Que CSRF Foi Removido?
 
