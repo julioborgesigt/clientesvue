@@ -7,26 +7,35 @@ import { logger } from '@/utils/logger';
 // Contador de requisições pendentes para debugging
 let pendingRequests = 0;
 
+// Configuração do axios client
+const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
+
+logger.log('=== CONFIGURAÇÃO AXIOS ===');
+logger.log('API URL:', baseURL);
+logger.log('Modo:', import.meta.env.DEV ? 'DESENVOLVIMENTO' : 'PRODUÇÃO');
+
 const apiClient = axios.create({
-    baseURL: getEnv('VITE_API_URL', 'https://clientes.domcloud.dev'),
+    baseURL: baseURL,
     timeout: parseInt(getEnv('VITE_API_TIMEOUT', '30000')), // 30 segundos padrão
     headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest' // Recomendado para segurança
     },
 });
 
-// Interceptor: Adiciona o token a CADA requisição
+// Interceptor: Adiciona o token JWT a CADA requisição protegida
 apiClient.interceptors.request.use(
     (config) => {
         pendingRequests++;
 
-        // Só adicione o token se a rota não for de autenticação
+        // Adicionar Authorization token se não for rota de autenticação
         if (!config.url.startsWith('/auth')) {
             const authStore = useAuthStore();
             const token = authStore.token;
 
             if (token) {
                 config.headers['Authorization'] = `Bearer ${token}`;
+                logger.log('Token JWT adicionado à requisição');
             } else {
                 // Bloquear requisição se não tiver token em rotas protegidas
                 pendingRequests--;
@@ -112,3 +121,4 @@ apiClient.interceptors.response.use(
 export const hasPendingRequests = () => pendingRequests > 0;
 
 export default apiClient;
+

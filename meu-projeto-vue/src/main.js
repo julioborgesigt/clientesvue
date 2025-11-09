@@ -53,7 +53,7 @@ import {
 } from 'vuetify/components'
 
 // Diretivas (importar apenas as necessárias)
-import { Ripple } from 'vuetify/directives' 
+import { Ripple } from 'vuetify/directives'
 
 // Definição do Tema Claro (Light)
 const lightTheme = {
