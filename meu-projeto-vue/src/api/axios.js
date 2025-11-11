@@ -11,10 +11,38 @@ let pendingRequests = 0;
 let csrfToken = null;
 
 /**
- * Busca o CSRF token do backend
+ * Limpa cookies CSRF do navegador
+ * Necessário antes de buscar novo token para evitar desincronização
+ * entre memória e cookies (problema comum em navegadores mobile)
  */
-async function fetchCsrfToken() {
+function clearCsrfCookie() {
     try {
+        // Limpa cookie do domínio atual
+        document.cookie = 'x-csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=none; Secure';
+
+        // Limpa cookie do backend (domcloud.dev)
+        const backendDomain = new URL(getEnv('VITE_API_URL', 'https://clientes.domcloud.dev')).hostname;
+        document.cookie = `x-csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${backendDomain}; SameSite=none; Secure`;
+
+        logger.log('🧹 Cookies CSRF limpos');
+    } catch (error) {
+        logger.warn('Erro ao limpar cookies CSRF:', error);
+    }
+}
+
+/**
+ * Busca o CSRF token do backend
+ * @param {boolean} forceClear - Se true, limpa cookies antigos antes de buscar novo token
+ */
+async function fetchCsrfToken(forceClear = false) {
+    try {
+        // Limpa cookies antigos se solicitado (importante para mobile)
+        if (forceClear) {
+            clearCsrfCookie();
+            // Aguarda um pouco para garantir que o navegador processou
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
         const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
         const csrfUrl = `${baseURL}/api/csrf-token`;
 
@@ -40,10 +68,15 @@ async function fetchCsrfToken() {
 
 /**
  * Inicializa o CSRF token na aplicação
+ * @param {boolean} forceClear - Se true, limpa cookies antigos antes de buscar novo token
  */
-export async function initializeCsrf() {
+export async function initializeCsrf(forceClear = false) {
     try {
-        await fetchCsrfToken();
+        if (forceClear) {
+            clearCsrfCookie();
+            csrfToken = null;
+        }
+        await fetchCsrfToken(forceClear);
         logger.log('CSRF inicializado com sucesso');
     } catch (error) {
         logger.warn('Falha ao inicializar CSRF token:', error);
@@ -148,6 +181,7 @@ apiClient.interceptors.response.use(
                     const errorMessage = error.response.data?.error || '';
                     if (errorMessage.includes('csrf') || errorMessage.includes('CSRF')) {
                         logger.warn('Detectado erro de CSRF - renovando token');
+                        clearCsrfCookie(); // Limpa cookies antigos (importante para mobile)
                         csrfToken = null; // Forçar renovação na próxima requisição
                     }
                     break;
