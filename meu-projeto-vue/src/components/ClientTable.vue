@@ -3,6 +3,19 @@
     <v-card-title class="d-flex align-center pe-2">
       <v-icon icon="mdi-account-group"></v-icon>
       <span class="ms-2">Clientes</span>
+
+      <!-- Botão para mostrar/ocultar arquivados -->
+      <v-btn
+        :prepend-icon="clientStore.showArchived ? 'mdi-archive-check' : 'mdi-archive-outline'"
+        :color="clientStore.showArchived ? 'orange' : 'default'"
+        variant="tonal"
+        size="small"
+        class="ms-3"
+        @click="clientStore.toggleShowArchived()"
+      >
+        {{ clientStore.showArchived ? 'Arquivados' : 'Ativos' }}
+      </v-btn>
+
       <v-spacer></v-spacer>
       <v-text-field
         v-model="search"
@@ -28,6 +41,10 @@
       hover
       @update:options="clientStore.handleTableUpdate"
     >
+      <template v-slot:item.name="{ item, value }">
+        {{ value }}
+        <v-chip v-if="item.arquivado" color="grey" size="x-small" class="ms-2">Arquivado</v-chip>
+      </template>
       <template v-slot:item.valor_cobrado="{ value }"> {{ formatCurrency(value) }} </template>
       <template v-slot:item.custo="{ value }"> {{ formatCurrency(value) }} </template>
       <template v-slot:item.status="{ value }"> <v-chip :color="getStatusColor(value)" size="small"> {{ value }} </v-chip> </template>
@@ -99,6 +116,28 @@
               <v-list-item title="Status: Não Pagou" @click="handleStatus('pending', item.id)"></v-list-item>
               <v-list-item title="Status: Pag. em Dias" @click="handleStatus('in-day', item.id)"></v-list-item>
               <v-divider></v-divider>
+
+              <!-- Botão de Arquivar/Desarquivar -->
+              <v-list-item
+                v-if="!item.arquivado"
+                title="Arquivar Cliente"
+                @click="handleArchive(item.id)"
+              >
+                <template v-slot:prepend>
+                  <v-icon color="orange" size="small">mdi-archive-arrow-down-outline</v-icon>
+                </template>
+              </v-list-item>
+              <v-list-item
+                v-else
+                title="Desarquivar Cliente"
+                @click="handleUnarchive(item.id)"
+              >
+                <template v-slot:prepend>
+                  <v-icon color="green" size="small">mdi-archive-arrow-up-outline</v-icon>
+                </template>
+              </v-list-item>
+              <v-divider></v-divider>
+
               <v-list-item title="Excluir Cliente" @click="handleDelete(item)">
                  <template v-slot:prepend> <v-icon color="red" size="small">mdi-delete-outline</v-icon> </template>
                </v-list-item>
@@ -163,6 +202,8 @@ const clientToDelete = ref(null);
 
 const handleStatus = (statusAction, clientId) => { clientStore.updateClientStatus(clientId, statusAction); };
 const handleDate = (unit, value, clientId) => { clientStore.adjustClientDate(clientId, value, unit); };
+const handleArchive = (clientId) => { clientStore.archiveClient(clientId); };
+const handleUnarchive = (clientId) => { clientStore.unarchiveClient(clientId); };
 const handleDelete = (client) => {
   clientToDelete.value = client;
   deleteDialog.value = true;

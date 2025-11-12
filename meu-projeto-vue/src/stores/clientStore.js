@@ -53,6 +53,7 @@ export const useClientStore = defineStore('client', {
         isLoadingActions: false, // <-- 2. ESTADO DE LOADING PARA O LOG
         pendingThisMonthClients: [], // <-- 1. NOVO ESTADO para guardar a lista
         isLoadingPendingClients: false, // <-- 2. Estado de loading
+        showArchived: false, // <-- NOVO: Controla se mostra clientes arquivados
     }),
     
     // GETTERS: Dados computados
@@ -286,8 +287,9 @@ export const useClientStore = defineStore('client', {
                     limit: this.limit,
                     status: this.statusFilter,
                     search: this.searchQuery,
+                    showArchived: this.showArchived, // Inclui filtro de arquivados
                 };
-                
+
                 const response = await apiClient.get('/clientes/list', { params });
 
                 // Mapeia os resultados e converte os campos para NÚMERO
@@ -416,6 +418,48 @@ export const useClientStore = defineStore('client', {
         },
 
         /**
+         * Arquiva um cliente (oculta da visualização principal)
+         * @async
+         * @param {number} id - ID do cliente
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.archiveClient(123)
+         */
+        async archiveClient(id) {
+            const notificationStore = useNotificationStore();
+            try {
+                await apiClient.put(`/clientes/archive/${id}`);
+                notificationStore.success('Cliente arquivado com sucesso!');
+                this.fetchClients(); // Atualiza a tabela
+                this.fetchStats(); // Atualiza os cards
+                this.fetchRecentActions(); // Recarrega o log
+            } catch (error) {
+                notificationStore.error('Erro ao arquivar cliente.');
+            }
+        },
+
+        /**
+         * Desarquiva um cliente (volta a aparecer na visualização principal)
+         * @async
+         * @param {number} id - ID do cliente
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.unarchiveClient(123)
+         */
+        async unarchiveClient(id) {
+            const notificationStore = useNotificationStore();
+            try {
+                await apiClient.put(`/clientes/unarchive/${id}`);
+                notificationStore.success('Cliente desarquivado com sucesso!');
+                this.fetchClients(); // Atualiza a tabela
+                this.fetchStats(); // Atualiza os cards
+                this.fetchRecentActions(); // Recarrega o log
+            } catch (error) {
+                notificationStore.error('Erro ao desarquivar cliente.');
+            }
+        },
+
+        /**
          * Ajusta a data de vencimento de um cliente
          * @async
          * @param {number} id - ID do cliente
@@ -503,6 +547,18 @@ export const useClientStore = defineStore('client', {
             this.statusFilter = ''; // Limpa o filtro de status
             this.currentPage = 1;
             this.fetchClients(); // Idealmente com "debounce"
+        },
+
+        /**
+         * Alterna visualização entre clientes ativos e arquivados
+         * @returns {void}
+         * @example
+         * clientStore.toggleShowArchived()
+         */
+        toggleShowArchived() {
+            this.showArchived = !this.showArchived;
+            this.currentPage = 1; // Reseta para primeira página
+            this.fetchClients();
         },
 
         /**
