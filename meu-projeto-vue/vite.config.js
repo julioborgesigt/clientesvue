@@ -13,6 +13,32 @@ export default defineConfig({
     },
   },
 
+  // Proxy para desenvolvimento (evita erro de CORS)
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://clientes.domcloud.dev',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/auth': {
+        target: 'https://clientes.domcloud.dev',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/clientes': {
+        target: 'https://clientes.domcloud.dev',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/servicos': {
+        target: 'https://clientes.domcloud.dev',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
+
   // Configuração de build para produção
   build: {
     // Remove console.log, console.warn, e console.error em produção
