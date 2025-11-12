@@ -80,11 +80,6 @@ export const useAuthStore = defineStore('auth', {
                     throw new Error('Email e senha são obrigatórios');
                 }
 
-                // Força renovação limpa do CSRF antes do login
-                // Isso garante que não haverá desincronização entre cookies e token em memória
-                // Especialmente importante em dispositivos móveis
-                await initializeCsrf(true);
-
                 // Chama a rota POST /auth/login
                 const response = await apiClient.post('/auth/login', {
                     email: sanitizedEmail,
