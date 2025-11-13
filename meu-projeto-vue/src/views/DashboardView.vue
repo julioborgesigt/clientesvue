@@ -46,24 +46,50 @@
 
     <v-row class="my-4">
 
-      <v-col cols="12" md="6"> 
+      <v-col cols="12" md="6">
         <v-card class="pa-0" elevation="2">
-           <v-card-title class="text-subtitle-1 ps-4 pt-3 pb-1">Previsão de Pagamentos</v-card-title>
-           <v-card-text class="pa-2">
-             <ClientChart :chart-data="clientStore.chartData" style="height: 250px;" /> 
-           </v-card-text>
+           <v-card-title class="d-flex align-center text-subtitle-1 ps-4 pt-3 pb-1">
+             <span>Previsão de Pagamentos</span>
+             <v-spacer></v-spacer>
+             <v-btn
+               v-if="mobile"
+               :icon="showPaymentChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+               variant="text"
+               size="small"
+               @click="showPaymentChart = !showPaymentChart"
+               :aria-label="showPaymentChart ? 'Ocultar gráfico' : 'Mostrar gráfico'"
+             ></v-btn>
+           </v-card-title>
+           <v-expand-transition>
+             <v-card-text v-show="showPaymentChart" class="pa-2">
+               <ClientChart :chart-data="clientStore.chartData" style="height: 250px;" />
+             </v-card-text>
+           </v-expand-transition>
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="6"> 
+      <v-col cols="12" md="6">
         <v-card class="pa-0" elevation="2">
-           <v-card-title class="text-subtitle-1 ps-4 pt-3 pb-1">Clientes por Serviço</v-card-title>
-           <v-card-text class="pa-2">
-             <ServiceDistributionChart 
-               :chart-data="clientStore.serviceDistributionData" 
-               style="height: 250px;" 
-             /> 
-           </v-card-text>
+           <v-card-title class="d-flex align-center text-subtitle-1 ps-4 pt-3 pb-1">
+             <span>Clientes por Serviço</span>
+             <v-spacer></v-spacer>
+             <v-btn
+               v-if="mobile"
+               :icon="showServiceChart ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+               variant="text"
+               size="small"
+               @click="showServiceChart = !showServiceChart"
+               :aria-label="showServiceChart ? 'Ocultar gráfico' : 'Mostrar gráfico'"
+             ></v-btn>
+           </v-card-title>
+           <v-expand-transition>
+             <v-card-text v-show="showServiceChart" class="pa-2">
+               <ServiceDistributionChart
+                 :chart-data="clientStore.serviceDistributionData"
+                 style="height: 250px;"
+               />
+             </v-card-text>
+           </v-expand-transition>
         </v-card>
       </v-col>
 
@@ -107,10 +133,10 @@
   </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useClientStore } from '@/stores/clientStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useTheme } from 'vuetify'; 
+import { useTheme, useDisplay } from 'vuetify'; 
 
 // Importe os componentes
 import DashboardStats from '@/components/DashboardStats.vue';
@@ -125,6 +151,14 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
 const clientStore = useClientStore();
 const authStore = useAuthStore();
+
+// Detecção de dispositivo móvel
+const { mobile } = useDisplay();
+
+// Controle de visibilidade dos gráficos
+// Em mobile: ocultos por padrão, em desktop: visíveis por padrão
+const showPaymentChart = ref(!mobile.value);
+const showServiceChart = ref(!mobile.value);
 
 // Estado Modal Pendentes
 const isPendingModalOpen = ref(false);
