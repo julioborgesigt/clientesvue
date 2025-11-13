@@ -2,14 +2,34 @@
   <v-container fluid class="fill-height pa-4 login-background">
     
     <v-row align="center" justify="center" class="fill-height fill-width ma-0">
-      
+
       <v-col cols="11" sm="8" md="6" lg="4" xl="3">
-        
+
+        <!-- Aviso de Modo Anônimo/Privado -->
+        <v-alert
+          v-if="isPrivateMode && !dismissedPrivateWarning"
+          type="warning"
+          variant="tonal"
+          prominent
+          closable
+          class="mb-4"
+          @click:close="dismissedPrivateWarning = true"
+        >
+          <v-alert-title class="d-flex align-center">
+            <v-icon icon="mdi-incognito" class="me-2"></v-icon>
+            Modo Anônimo Detectado
+          </v-alert-title>
+          <div class="text-body-2 mt-2">
+            O login pode não funcionar em modo privado/anônimo devido a restrições de cookies de segurança.
+            <strong>Se tiver problemas, use uma guia normal.</strong>
+          </div>
+        </v-alert>
+
         <div class="text-center mb-6">
-          <v-img 
-            src="https://domcloud.co/img/logo.png" 
-            max-height="80" 
-            contain 
+          <v-img
+            src="https://domcloud.co/img/logo.png"
+            max-height="80"
+            contain
           ></v-img>
         </div>
 
@@ -94,10 +114,40 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/authStore';
 
 const authStore = useAuthStore();
+
+// --- DETECÇÃO DE MODO PRIVADO/ANÔNIMO ---
+const isPrivateMode = ref(false);
+const dismissedPrivateWarning = ref(false);
+
+onMounted(() => {
+  // Método 1: Storage API
+  if ('storage' in navigator && 'estimate' in navigator.storage) {
+    navigator.storage.estimate().then(estimate => {
+      // Em modo privado, quota é muito baixa (< 120 MB)
+      if (estimate.quota < 120000000) {
+        isPrivateMode.value = true;
+      }
+    }).catch(() => {
+      // Erro ao acessar storage = provavelmente modo privado
+      isPrivateMode.value = true;
+    });
+  }
+
+  // Método 2: IndexedDB (fallback)
+  try {
+    const openRequest = indexedDB.open('test');
+    openRequest.onerror = () => {
+      isPrivateMode.value = true;
+    };
+  } catch {
+    isPrivateMode.value = true;
+  }
+});
+// --- FIM DA DETECÇÃO DE MODO PRIVADO ---
 
 // --- LÓGICA PARA ALTERNAR ENTRE LOGIN E REGISTRO ---
 const mode = ref('login'); // 'login' ou 'register'
