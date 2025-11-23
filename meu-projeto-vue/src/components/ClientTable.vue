@@ -236,7 +236,7 @@ async function sendWhatsAppMessage(client, messageType = 'default') {
     // Sanitizar dados antes de enviar
     const safeName = sanitizeForURL(client.name || '');
     const safeMessage = sanitizeForURL(message);
-    const fullMessage = `${safeMessage}\nCliente: ${safeName}\nVencimento: ${formattedDate}`;
+    const fullMessage = `${safeMessage}\n ${formattedDate}`;
 
     // Sanitizar telefone
     const safePhone = sanitizePhone(client.whatsapp);
