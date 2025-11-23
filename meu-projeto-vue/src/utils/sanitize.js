@@ -33,14 +33,17 @@ export const sanitizeHTML = (text) => {
 export const sanitizeForURL = (text) => {
   if (!text || typeof text !== 'string') return '';
 
-  // Remove caracteres de controle ASCII (0x00-0x1F e 0x7F)
-  let sanitized = text.replace(/[\x00-\x1F\x7F]/g, '');
+  // Remove caracteres de controle ASCII perigosos, mas preserva quebras de linha (\n = 0x0A, \r = 0x0D)
+  let sanitized = text.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
   // Remove < e >
   sanitized = sanitized.replace(/[<>]/g, '');
 
-  // Remove múltiplos espaços
-  sanitized = sanitized.replace(/\s+/g, ' ');
+  // Normaliza quebras de linha para \n
+  sanitized = sanitized.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // Remove múltiplas quebras de linha consecutivas (mais de 2)
+  sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
 
   return sanitized.trim();
 };
