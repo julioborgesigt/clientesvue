@@ -105,12 +105,6 @@
 
     </v-row>
 
-    <!-- NOVO: Card de Alertas de Vencimento -->
-    <v-row class="my-4">
-      <v-col cols="12" md="6" lg="4">
-        <AlertsCard />
-      </v-col>
-    </v-row>
 
     <v-row class="my-4">
       <v-col cols="12" lg="8">
