@@ -126,14 +126,16 @@ export const useAuthStore = defineStore('auth', {
 
         /**
          * Registra um novo usuário no sistema
+         * IMPORTANTE: Retorna o recovery code que deve ser salvo pelo usuário
          * @async
          * @param {string} name - Nome completo do usuário
          * @param {string} email - Email do usuário
          * @param {string} password - Senha do usuário
          * @throws {Error} Se dados inválidos ou erro de rede
-         * @returns {Promise<boolean>} True se registro bem-sucedido
+         * @returns {Promise<Object>} Objeto com success, message e recoveryCode
          * @example
-         * const success = await authStore.register('João Silva', 'joao@example.com', 'senha123')
+         * const result = await authStore.register('João Silva', 'joao@example.com', 'SenhaForte123!')
+         * console.log(result.recoveryCode) // A1B2-C3D4-E5F6-G7H8
          */
         async register(name, email, password) {
             const notificationStore = useNotificationStore();
@@ -154,12 +156,161 @@ export const useAuthStore = defineStore('auth', {
                     password
                 });
 
-                notificationStore.success(response.data.message || 'Cadastro realizado com sucesso!');
-                return true;
+                logger.log('Registro bem-sucedido');
+
+                // Retorna os dados incluindo o recovery code
+                return {
+                    success: true,
+                    message: response.data.message,
+                    recoveryCode: response.data.recoveryCode,
+                    warning: response.data.warning
+                };
             } catch (error) {
                 logger.error('Erro no registro:', error);
-                // Mensagem genérica
-                const message = 'Erro ao registrar. Tente novamente.';
+                const message = error.response?.data?.error || 'Erro ao registrar. Tente novamente.';
+                notificationStore.error(message);
+                throw error;
+            }
+        },
+
+        /**
+         * Primeiro login com código de recuperação
+         * Usado após registro para validar o recovery code
+         * @async
+         * @param {string} email - Email do usuário
+         * @param {string} password - Senha do usuário
+         * @param {string} recoveryCode - Código de recuperação fornecido no registro
+         * @returns {Promise<void>}
+         * @example
+         * await authStore.firstLogin('user@example.com', 'senha123', 'A1B2-C3D4-E5F6-G7H8')
+         */
+        async firstLogin(email, password, recoveryCode) {
+            const notificationStore = useNotificationStore();
+            try {
+                // Sanitizar entrada
+                const sanitizedEmail = email.trim().toLowerCase();
+                const sanitizedCode = recoveryCode.trim().toUpperCase();
+
+                // Validação básica
+                if (!sanitizedEmail || !password || !sanitizedCode) {
+                    throw new Error('Todos os campos são obrigatórios');
+                }
+
+                // Chama a rota POST /auth/first-login
+                const response = await apiClient.post('/auth/first-login', {
+                    email: sanitizedEmail,
+                    password,
+                    recoveryCode: sanitizedCode
+                });
+
+                // Armazena os tokens (mesmo processo do login normal)
+                this.accessToken = response.data.accessToken;
+                this.refreshToken = response.data.refreshToken;
+                this.token = response.data.accessToken;
+
+                // Define expiração
+                const expiry = Date.now() + (15 * 60 * 1000);
+                this.tokenExpiry = expiry.toString();
+
+                // Salva no sessionStorage
+                sessionStorage.setItem('accessToken', response.data.accessToken);
+                sessionStorage.setItem('refreshToken', response.data.refreshToken);
+                sessionStorage.setItem('token', response.data.accessToken);
+                sessionStorage.setItem('tokenExpiry', expiry.toString());
+
+                logger.log('Primeiro login concluído com sucesso');
+                notificationStore.success('Primeiro login concluído! Bem-vindo ao sistema.');
+
+                // Redireciona para o dashboard
+                router.push('/dashboard');
+            } catch (error) {
+                logger.error('Erro no primeiro login:', error);
+                const message = error.response?.data?.error || 'Falha no primeiro login. Verifique seus dados.';
+                notificationStore.error(message);
+                throw error;
+            }
+        },
+
+        /**
+         * Reseta senha usando código de recuperação (quando esqueceu a senha)
+         * @async
+         * @param {string} email - Email do usuário
+         * @param {string} recoveryCode - Código de recuperação
+         * @param {string} newPassword - Nova senha
+         * @returns {Promise<boolean>} True se reset bem-sucedido
+         * @example
+         * await authStore.resetPasswordWithCode('user@example.com', 'A1B2-C3D4-E5F6-G7H8', 'NovaSenha456!')
+         */
+        async resetPasswordWithCode(email, recoveryCode, newPassword) {
+            const notificationStore = useNotificationStore();
+            try {
+                // Sanitizar entradas
+                const sanitizedEmail = email.trim().toLowerCase();
+                const sanitizedCode = recoveryCode.trim().toUpperCase();
+
+                // Validação básica
+                if (!sanitizedEmail || !sanitizedCode || !newPassword) {
+                    throw new Error('Todos os campos são obrigatórios');
+                }
+
+                // Chama a rota POST /auth/reset-password-with-code
+                const response = await apiClient.post('/auth/reset-password-with-code', {
+                    email: sanitizedEmail,
+                    recoveryCode: sanitizedCode,
+                    newPassword
+                });
+
+                logger.log('Senha resetada com sucesso');
+                notificationStore.success(response.data.message || 'Senha resetada com sucesso!');
+
+                return true;
+            } catch (error) {
+                logger.error('Erro ao resetar senha:', error);
+                const message = error.response?.data?.error || 'Erro ao resetar senha. Verifique seus dados.';
+                notificationStore.error(message);
+                throw error;
+            }
+        },
+
+        /**
+         * Altera senha do usuário autenticado (quando lembra a senha atual)
+         * @async
+         * @param {string} currentPassword - Senha atual
+         * @param {string} newPassword - Nova senha
+         * @returns {Promise<boolean>} True se troca bem-sucedida
+         * @example
+         * await authStore.changePassword('SenhaAntiga123!', 'SenhaNova456!')
+         */
+        async changePassword(currentPassword, newPassword) {
+            const notificationStore = useNotificationStore();
+            try {
+                // Validação básica
+                if (!currentPassword || !newPassword) {
+                    throw new Error('Ambas as senhas são obrigatórias');
+                }
+
+                if (currentPassword === newPassword) {
+                    throw new Error('A nova senha não pode ser igual à senha atual');
+                }
+
+                // Chama a rota PUT /auth/change-password
+                const response = await apiClient.put('/auth/change-password', {
+                    currentPassword,
+                    newPassword
+                });
+
+                logger.log('Senha alterada com sucesso');
+                notificationStore.success(response.data.message || 'Senha alterada com sucesso!');
+
+                // Força logout para fazer login novamente (por segurança)
+                setTimeout(() => {
+                    this.logout();
+                }, 2000);
+
+                return true;
+            } catch (error) {
+                logger.error('Erro ao alterar senha:', error);
+                const message = error.response?.data?.error || 'Erro ao alterar senha.';
                 notificationStore.error(message);
                 throw error;
             }

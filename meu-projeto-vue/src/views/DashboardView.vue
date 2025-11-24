@@ -25,6 +25,11 @@
       </v-tooltip>
     </v-btn>
 
+    <v-btn @click="openChangePasswordModal" icon>
+      <v-icon>mdi-lock-reset</v-icon>
+      <v-tooltip activator="parent" location="bottom">Alterar Senha</v-tooltip>
+    </v-btn>
+
     <v-btn @click="handleLogout" icon>
       <v-icon>mdi-logout</v-icon>
       <v-tooltip activator="parent" location="bottom">Sair</v-tooltip>
@@ -132,6 +137,11 @@
     @close="isModalOpen = false"
   />
 
+  <ChangePasswordModal
+    :is-open="isChangePasswordModalOpen"
+    @close="isChangePasswordModalOpen = false"
+  />
+
   <ConfirmDialog
     v-model="logoutDialog"
     title="Confirmar Saída"
@@ -161,6 +171,7 @@ import RecentActions from '@/components/RecentActions.vue';
 import PendingClientsModal from '@/components/PendingClientsModal.vue'; // <-- PendingClientsModal importado
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import AlertsCard from '@/components/AlertsCard.vue'; // <-- NOVO: AlertsCard importado
+import ChangePasswordModal from '@/components/ChangePasswordModal.vue'; // <-- NOVO: ChangePasswordModal importado
 
 
 const router = useRouter();
@@ -180,6 +191,12 @@ const isPendingModalOpen = ref(false);
 const openPendingModal = () => {
   isPendingModalOpen.value = true;
   clientStore.fetchPendingThisMonthClients();
+};
+
+// Estado Modal de Alteração de Senha
+const isChangePasswordModalOpen = ref(false);
+const openChangePasswordModal = () => {
+  isChangePasswordModalOpen.value = true;
 };
 
 // Estado Menu Lateral

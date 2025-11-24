@@ -8,6 +8,9 @@ import { useAuthStore } from '@/stores/authStore';
  * Reduz o bundle inicial em ~30%
  */
 const LoginView = () => import('../views/LoginView.vue');
+const RegisterView = () => import('../views/RegisterView.vue');
+const FirstLoginView = () => import('../views/FirstLoginView.vue');
+const ForgotPasswordView = () => import('../views/ForgotPasswordView.vue');
 const DashboardView = () => import('../views/DashboardView.vue');
 const AdminView = () => import('../views/AdminView.vue');
 
@@ -16,6 +19,21 @@ const routes = [
         path: '/login',
         name: 'Login',
         component: LoginView,
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: RegisterView,
+    },
+    {
+        path: '/first-login',
+        name: 'FirstLogin',
+        component: FirstLoginView,
+    },
+    {
+        path: '/forgot-password',
+        name: 'ForgotPassword',
+        component: ForgotPasswordView,
     },
     {
         path: '/dashboard',

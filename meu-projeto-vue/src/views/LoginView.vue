@@ -44,11 +44,16 @@
               <v-btn type="submit" color="primary" block size="large" class="mt-4 mb-4">
                 Entrar
               </v-btn>
-              
+
               <div class="text-center mb-4">
-                <a href="#" class="text-caption text-decoration-none text-white">
+                <v-btn
+                  variant="text"
+                  size="small"
+                  color="white"
+                  @click="goToForgotPassword"
+                >
                   Esqueceu a senha?
-                </a>
+                </v-btn>
               </div>
             </v-form>
 
@@ -63,21 +68,21 @@
 
             <v-divider class="my-4">Ou</v-divider>
 
-            <v-btn 
+            <v-btn
               v-if="mode === 'login'"
-              prepend-icon="mdi-email-outline" 
-              variant="outlined" 
-              block 
+              prepend-icon="mdi-account-plus"
+              variant="outlined"
+              block
               class="mb-3"
-              @click="switchToRegister"
+              @click="goToRegister"
             >
-              Registrar com Email
+              Criar Nova Conta
             </v-btn>
-             <v-btn 
+            <v-btn
               v-if="mode === 'register'"
-              prepend-icon="mdi-arrow-left" 
-              variant="outlined" 
-              block 
+              prepend-icon="mdi-arrow-left"
+              variant="outlined"
+              block
               class="mb-3"
               @click="switchToLogin"
             >
@@ -95,8 +100,10 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 
+const router = useRouter();
 const authStore = useAuthStore();
 
 // --- LÓGICA PARA ALTERNAR ENTRE LOGIN E REGISTRO ---
@@ -123,7 +130,16 @@ const handleLogin = () => {
 const handleRegister = () => {
   authStore.register(registerName.value, registerEmail.value, registerPassword.value);
   // Após registrar, volta para a tela de login
-  switchToLogin(); 
+  switchToLogin();
+};
+
+// Navegação para novas rotas
+const goToRegister = () => {
+  router.push('/register');
+};
+
+const goToForgotPassword = () => {
+  router.push('/forgot-password');
 };
 </script>
 
