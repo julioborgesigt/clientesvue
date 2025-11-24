@@ -13,6 +13,11 @@
 
     <v-spacer></v-spacer>
 
+    <v-btn @click="navigateToAdmin" icon>
+      <v-icon>mdi-shield-crown</v-icon>
+      <v-tooltip activator="parent" location="bottom">Painel de Administração</v-tooltip>
+    </v-btn>
+
     <v-btn @click="toggleTheme" icon>
       <v-icon>{{ theme.global.current.value.dark ? 'mdi-weather-night' : 'mdi-weather-sunny' }}</v-icon>
       <v-tooltip activator="parent" location="bottom">
@@ -93,14 +98,21 @@
         </v-card>
       </v-col>
 
-    </v-row> 
-    
+    </v-row>
+
+    <!-- NOVO: Card de Alertas de Vencimento -->
     <v-row class="my-4">
-      <v-col cols="12" lg="8"> 
+      <v-col cols="12" md="6" lg="4">
+        <AlertsCard />
+      </v-col>
+    </v-row>
+
+    <v-row class="my-4">
+      <v-col cols="12" lg="8">
         <ClientTable @open-edit-modal="openEditModal" />
       </v-col>
       <v-col cols="12" lg="4">
-        <RecentActions /> 
+        <RecentActions />
       </v-col>
     </v-row>
     
@@ -134,6 +146,7 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useClientStore } from '@/stores/clientStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useTheme, useDisplay } from 'vuetify'; 
@@ -141,14 +154,16 @@ import { useTheme, useDisplay } from 'vuetify';
 // Importe os componentes
 import DashboardStats from '@/components/DashboardStats.vue';
 import ClientChart from '@/components/ClientChart.vue';
-import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue'; 
+import ServiceDistributionChart from '@/components/ServiceDistributionChart.vue';
 import ClientTable from '@/components/ClientTable.vue';
 import AppModal from '@/components/AppModal.vue'; // <-- AppModal importado
 import RecentActions from '@/components/RecentActions.vue';
 import PendingClientsModal from '@/components/PendingClientsModal.vue'; // <-- PendingClientsModal importado
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import AlertsCard from '@/components/AlertsCard.vue'; // <-- NOVO: AlertsCard importado
 
 
+const router = useRouter();
 const clientStore = useClientStore();
 const authStore = useAuthStore();
 
@@ -186,11 +201,16 @@ const openEditModal = (client) => {
   handleOpenModal('editClient'); // Chama a função que abre o AppModal
 };
 
-// Lógica Dark Mode 
-const theme = useTheme(); 
+// Lógica Dark Mode
+const theme = useTheme();
 const toggleTheme = () => {
   const newTheme = theme.global.current.value.dark ? 'light' : 'dark';
-  theme.global.name.value = newTheme; 
+  theme.global.name.value = newTheme;
+};
+
+// Navegação para Admin
+const navigateToAdmin = () => {
+  router.push('/admin');
 };
 
 // Lógica Logout

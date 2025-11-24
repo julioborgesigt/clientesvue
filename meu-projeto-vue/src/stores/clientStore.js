@@ -54,6 +54,9 @@ export const useClientStore = defineStore('client', {
         pendingThisMonthClients: [], // <-- 1. NOVO ESTADO para guardar a lista
         isLoadingPendingClients: false, // <-- 2. Estado de loading
         showArchived: false, // <-- NOVO: Controla se mostra clientes arquivados
+        alerts: [], // <-- NOVO: Clientes com vencimento nos próximos 3 dias
+        alertsCount: 0, // <-- NOVO: Contagem de alertas
+        isLoadingAlerts: false, // <-- NOVO: Estado de loading dos alertas
     }),
     
     // GETTERS: Dados computados
@@ -110,15 +113,15 @@ export const useClientStore = defineStore('client', {
          */
         async fetchPendingThisMonthClients() {
             this.isLoadingPendingClients = true;
-            this.pendingThisMonthClients = []; 
+            this.pendingThisMonthClients = [];
             try {
-                const response = await apiClient.get('/clientes/pending-this-month'); 
-                
+                const response = await apiClient.get('/clientes/pending-this-month');
+
                 // --- INÍCIO DA CORREÇÃO ---
                 // Mapeia os resultados e converte valor_cobrado para número
                 const formattedClients = response.data.map(client => ({
                     ...client,
-                    valor_cobrado: parseFloat(client.valor_cobrado) || 0 
+                    valor_cobrado: parseFloat(client.valor_cobrado) || 0
                 }));
                 // --- FIM DA CORREÇÃO ---
 
@@ -127,6 +130,38 @@ export const useClientStore = defineStore('client', {
                 // Erro silencioso - não há necessidade de notificar o usuário
             } finally {
                 this.isLoadingPendingClients = false;
+            }
+        },
+
+        /**
+         * Busca clientes com vencimento nos próximos 3 dias (alertas)
+         * Utilizado para mostrar notificações de vencimentos próximos
+         * @async
+         * @returns {Promise<void>}
+         * @example
+         * await clientStore.fetchAlerts()
+         */
+        async fetchAlerts() {
+            this.isLoadingAlerts = true;
+            this.alerts = [];
+            try {
+                const response = await apiClient.get('/clientes/alerts');
+
+                // Formata os dados dos clientes
+                const formattedAlerts = response.data.map(client => ({
+                    ...client,
+                    valor_cobrado: parseFloat(client.valor_cobrado) || 0,
+                    custo: parseFloat(client.custo) || 0
+                }));
+
+                this.alerts = formattedAlerts;
+                this.alertsCount = formattedAlerts.length;
+            } catch (error) {
+                // Erro silencioso - apenas limpa alertas
+                this.alerts = [];
+                this.alertsCount = 0;
+            } finally {
+                this.isLoadingAlerts = false;
             }
         },
 

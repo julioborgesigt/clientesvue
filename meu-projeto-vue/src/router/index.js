@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/authStore';
  */
 const LoginView = () => import('../views/LoginView.vue');
 const DashboardView = () => import('../views/DashboardView.vue');
+const AdminView = () => import('../views/AdminView.vue');
 
 const routes = [
     {
@@ -21,6 +22,12 @@ const routes = [
         name: 'Dashboard',
         component: DashboardView,
         meta: { requiresAuth: true }, // Esta rota exige login
+    },
+    {
+        path: '/admin',
+        name: 'Admin',
+        component: AdminView,
+        meta: { requiresAuth: true, requiresAdmin: true }, // Requer login e permissão admin
     },
     // Redirecionamento padrão
     {
