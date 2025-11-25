@@ -4,11 +4,11 @@
 
     <v-spacer></v-spacer>
 
-    <v-btn icon="mdi-view-dashboard" @click="navigateToDashboard" color="white">
+    <v-btn icon="mdi-view-dashboard" @click="navigateToDashboard">
       <v-tooltip activator="parent" location="bottom">Voltar ao Dashboard</v-tooltip>
     </v-btn>
 
-    <v-btn icon="mdi-logout" @click="handleLogout" color="white">
+    <v-btn icon="mdi-logout" @click="handleLogout">
       <v-tooltip activator="parent" location="bottom">Sair</v-tooltip>
     </v-btn>
   </v-app-bar>
