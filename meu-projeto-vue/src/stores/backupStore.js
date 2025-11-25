@@ -79,8 +79,11 @@ export const useBackupStore = defineStore('backup', {
             this.isLoading = true;
             try {
                 const response = await apiClient.get('/backup');
+                console.log('💾 Backups Response:', response.data);
                 this.backups = response.data.backups || [];
+                console.log('📋 Backups carregados:', this.backups.length, 'backup(s)');
             } catch (error) {
+                console.error('❌ Erro ao buscar backups:', error.response?.data || error.message);
                 const notificationStore = useNotificationStore();
                 notificationStore.error('Erro ao buscar lista de backups.');
                 this.backups = [];
@@ -127,11 +130,14 @@ export const useBackupStore = defineStore('backup', {
         async downloadBackup(filename) {
             const notificationStore = useNotificationStore();
             try {
+                console.log('⬇️ Iniciando download do backup:', filename);
                 notificationStore.info('Iniciando download...');
 
                 const response = await apiClient.get(`/backup/${filename}`, {
                     responseType: 'blob' // Importante para download de arquivos
                 });
+
+                console.log('✅ Backup baixado, tamanho:', response.data.size, 'bytes');
 
                 // Cria um link temporário para download
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -148,6 +154,7 @@ export const useBackupStore = defineStore('backup', {
                 notificationStore.success('Download concluído!');
                 return true;
             } catch (error) {
+                console.error('❌ Erro ao baixar backup:', error.response?.data || error.message);
                 notificationStore.error(
                     error.response?.data?.error || 'Erro ao baixar backup.'
                 );
@@ -166,13 +173,16 @@ export const useBackupStore = defineStore('backup', {
         async deleteBackup(filename) {
             const notificationStore = useNotificationStore();
             try {
+                console.log('🗑️ Excluindo backup:', filename);
                 const response = await apiClient.delete(`/backup/${filename}`);
+                console.log('✅ Backup excluído com sucesso');
                 notificationStore.success(response.data.message || 'Backup excluído com sucesso!');
 
                 // Recarrega a lista de backups
                 await this.fetchBackups();
                 return true;
             } catch (error) {
+                console.error('❌ Erro ao excluir backup:', error.response?.data || error.message);
                 notificationStore.error(
                     error.response?.data?.error || 'Erro ao excluir backup.'
                 );
@@ -190,8 +200,10 @@ export const useBackupStore = defineStore('backup', {
         async fetchBackupConfig() {
             try {
                 const response = await apiClient.get('/backup/config/status');
+                console.log('⚙️ Backup Config Response:', response.data);
                 this.config = response.data;
             } catch (error) {
+                console.error('❌ Erro ao buscar config de backup:', error.response?.data || error.message);
                 this.config = null;
             }
         }

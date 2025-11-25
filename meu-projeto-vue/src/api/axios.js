@@ -124,8 +124,22 @@ apiClient.interceptors.request.use(
             }
         }
 
-        // Adicionar Authorization token se não for rota de autenticação
-        if (!config.url.startsWith('/auth')) {
+        // Rotas de autenticação públicas que NÃO precisam de JWT
+        const publicAuthRoutes = [
+            '/auth/login',
+            '/auth/register',
+            '/auth/first-login',
+            '/auth/reset-password-with-code',
+            '/auth/reset-password',
+            '/api/csrf-token'
+        ];
+
+        // Verifica se é uma rota pública
+        const isPublicRoute = publicAuthRoutes.some(route => config.url.startsWith(route));
+
+        // Adicionar Authorization token para todas as rotas protegidas
+        // (incluindo /auth/change-password e outras rotas protegidas)
+        if (!isPublicRoute) {
             const authStore = useAuthStore();
             const token = authStore.token;
 

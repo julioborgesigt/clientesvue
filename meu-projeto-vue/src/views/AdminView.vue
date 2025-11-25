@@ -284,7 +284,12 @@ const backupHeaders = [
  * Formata bytes para formato legível
  */
 function formatBytes(bytes) {
-  if (!bytes || bytes === 0) return '0 Bytes';
+  // Tratamento para valores undefined, null ou inválidos
+  if (bytes === undefined || bytes === null || isNaN(bytes)) {
+    return 'N/A';
+  }
+
+  if (bytes === 0) return '0 Bytes';
 
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -313,8 +318,10 @@ async function refreshHealthStatus() {
   isLoadingHealth.value = true;
   try {
     const response = await apiClient.get('/health/detailed');
+    console.log('🏥 Health Status Response:', response.data);
     healthStatus.value = response.data;
   } catch (error) {
+    console.error('❌ Erro ao buscar health status:', error.response?.data || error.message);
     notificationStore.error('Erro ao buscar status do sistema.');
     healthStatus.value = null;
   } finally {

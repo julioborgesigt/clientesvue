@@ -11,6 +11,9 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import '@mdi/font/css/materialdesignicons.css'
 
+// Estilos globais de autenticação
+import './assets/auth-styles.css'
+
 // Importar apenas componentes usados (reduz bundle em ~40%)
 import {
   VAlert,
@@ -23,6 +26,7 @@ import {
   VCardSubtitle,
   VCardText,
   VCardTitle,
+  VCheckbox,
   VChip,
   VCol,
   VContainer,
@@ -91,6 +95,7 @@ const vuetify = createVuetify({
     VCardSubtitle,
     VCardText,
     VCardTitle,
+    VCheckbox,
     VChip,
     VCol,
     VContainer,

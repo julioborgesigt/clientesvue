@@ -1,12 +1,12 @@
 <template>
   <div>
-    <!-- Título -->
-    <v-card-title class="text-center text-h5 font-weight-bold pb-6" style="color: white;">
-      <v-icon icon="mdi-login" class="me-2" color="primary" size="large"></v-icon>
+    <!-- Título Responsivo -->
+    <v-card-title class="text-center auth-title auth-spacing-md pa-0">
+      <v-icon icon="mdi-login" class="me-2 auth-icon" color="warning"></v-icon>
       Entre no Portal
     </v-card-title>
 
-    <v-card-text>
+    <v-card-text class="pa-0">
       <!-- Formulário de Login -->
       <v-form ref="loginForm" @submit.prevent="handleLogin">
         <!-- Email -->
@@ -18,8 +18,9 @@
           variant="outlined"
           :rules="[rules.required, rules.email]"
           density="comfortable"
-          class="mb-3 custom-input"
+          class="auth-spacing-md custom-input"
           :disabled="isLoading"
+          autocomplete="email"
         ></v-text-field>
 
         <!-- Senha -->
@@ -33,45 +34,43 @@
           variant="outlined"
           :rules="[rules.required]"
           density="comfortable"
-          class="custom-input"
+          class="auth-spacing-md custom-input"
           :disabled="isLoading"
+          autocomplete="current-password"
         ></v-text-field>
 
         <!-- Botão de Login -->
         <v-btn
           type="submit"
-          color="primary"
+          color="warning"
           block
-          size="x-large"
-          class="mt-5 mb-4 font-weight-bold"
+          class="auth-button auth-spacing-md"
           :loading="isLoading"
           :disabled="isLoading"
-          style="font-size: 16px;"
         >
           <v-icon icon="mdi-login" class="me-2"></v-icon>
           Entrar
         </v-btn>
 
         <!-- Link para Esqueci a Senha -->
-        <div class="text-center mb-4">
-          <v-btn
-            variant="text"
-            size="small"
-            color="error"
+        <div class="text-center auth-spacing-md">
+          <a
+            class="auth-link"
             @click="goToForgotPassword"
-            :disabled="isLoading"
-            class="font-weight-bold"
+            :class="{ 'auth-loading': isLoading }"
+            tabindex="0"
+            @keyup.enter="goToForgotPassword"
           >
             <v-icon icon="mdi-lock-reset" size="small" class="me-1"></v-icon>
             Esqueceu a senha?
-          </v-btn>
+          </a>
         </div>
       </v-form>
 
-      <!-- Divisor -->
-      <v-divider class="my-4">
-        <span class="text-caption font-weight-bold" style="color: white;">ou</span>
-      </v-divider>
+      <!-- Divisor Customizado -->
+      <div class="auth-divider">
+        <span>ou</span>
+      </div>
 
       <!-- Botão para Criar Conta -->
       <v-btn
@@ -79,10 +78,9 @@
         variant="outlined"
         color="warning"
         block
-        size="large"
+        class="auth-button-secondary"
         @click="goToRegister"
         :disabled="isLoading"
-        class="font-weight-bold"
       >
         Criar Nova Conta
       </v-btn>
@@ -156,25 +154,24 @@ function goToForgotPassword() {
 </script>
 
 <style scoped>
-/* Melhora a legibilidade dos inputs */
-:deep(.custom-input .v-field__input) {
-  font-weight: 600 !important;
-  color: white !important;
-  font-size: 15px !important;
-}
+/* Estilos específicos do Login - A maioria vem de auth-styles.css */
 
-:deep(.custom-input .v-label) {
-  font-weight: 600 !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-  font-size: 14px !important;
-}
-
+/* Mensagens de erro */
 :deep(.custom-input .v-field--error .v-label) {
-  color: #ff5252 !important;
+  color: #FF5252 !important;
+  font-weight: 700 !important;
 }
 
 :deep(.custom-input .v-messages__message) {
   font-weight: 600 !important;
-  color: #ff5252 !important;
+  color: #FF5252 !important;
+  font-size: 13px !important;
+  margin-top: 4px;
+}
+
+@media (max-width: 599px) {
+  :deep(.custom-input .v-messages__message) {
+    font-size: 12px !important;
+  }
 }
 </style>
