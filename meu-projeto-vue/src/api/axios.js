@@ -4,60 +4,50 @@ import { useAuthStore } from '@/stores/authStore';
 import { getEnv } from '@/utils/env';
 import { logger } from '@/utils/logger';
 
-// Contador de requisições pendentes para debugging
-let pendingRequests = 0;
+// --- Refresh Token Logic ---
+let isRefreshing = false;
+let failedQueue = [];
 
-// CSRF Token management
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
+// --- CSRF Token management ---
 let csrfToken = null;
 
-/**
- * Limpa cookies CSRF do navegador
- * Necessário antes de buscar novo token para evitar desincronização
- * entre memória e cookies (problema comum em navegadores mobile)
- */
 function clearCsrfCookie() {
     try {
-        // Limpa cookie do domínio atual
         document.cookie = 'x-csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=none; Secure';
-
-        // Limpa cookie do backend (domcloud.dev)
         const backendDomain = new URL(getEnv('VITE_API_URL', 'https://clientes.domcloud.dev')).hostname;
         document.cookie = `x-csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${backendDomain}; SameSite=none; Secure`;
-
         logger.log('🧹 Cookies CSRF limpos');
     } catch (error) {
         logger.warn('Erro ao limpar cookies CSRF:', error);
     }
 }
 
-/**
- * Busca o CSRF token do backend
- * @param {boolean} forceClear - Se true, limpa cookies antigos antes de buscar novo token
- */
 async function fetchCsrfToken(forceClear = false) {
     try {
-        // Limpa cookies antigos se solicitado (importante para mobile)
         if (forceClear) {
             clearCsrfCookie();
-            // Aguarda um pouco para garantir que o navegador processou
             await new Promise(resolve => setTimeout(resolve, 100));
         }
-
         const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
         const csrfUrl = `${baseURL}/api/csrf-token`;
-
         logger.log('🔐 Buscando CSRF token de:', csrfUrl);
-
-        const response = await axios.get(csrfUrl, {
-            withCredentials: true  // Importante para cookies
-        });
-
+        const response = await axios.get(csrfUrl, { withCredentials: true });
         if (response.data && response.data.csrfToken) {
             csrfToken = response.data.csrfToken;
-            logger.log('✅ CSRF token obtido:', csrfToken.substring(0, 20) + '...');
+            logger.log('✅ CSRF token obtido');
             return csrfToken;
         } else {
-            logger.error('❌ Token CSRF não encontrado na resposta');
             throw new Error('Token CSRF não encontrado na resposta');
         }
     } catch (error) {
@@ -66,10 +56,6 @@ async function fetchCsrfToken(forceClear = false) {
     }
 }
 
-/**
- * Inicializa o CSRF token na aplicação
- * @param {boolean} forceClear - Se true, limpa cookies antigos antes de buscar novo token
- */
 export async function initializeCsrf(forceClear = false) {
     try {
         if (forceClear) {
@@ -83,159 +69,128 @@ export async function initializeCsrf(forceClear = false) {
     }
 }
 
-// Configuração do axios client
 const baseURL = getEnv('VITE_API_URL', 'https://clientes.domcloud.dev');
-
-logger.log('=== CONFIGURAÇÃO AXIOS ===');
-logger.log('API URL:', baseURL);
-logger.log('Modo:', import.meta.env.DEV ? 'DESENVOLVIMENTO' : 'PRODUÇÃO');
-
 const apiClient = axios.create({
     baseURL: baseURL,
-    timeout: parseInt(getEnv('VITE_API_TIMEOUT', '30000')), // 30 segundos padrão
+    timeout: parseInt(getEnv('VITE_API_TIMEOUT', '30000')),
     headers: {
         'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest' // Recomendado para segurança
+        'X-Requested-With': 'XMLHttpRequest'
     },
-    withCredentials: true, // Necessário para cookies CSRF
+    withCredentials: true,
 });
 
-// Interceptor: Adiciona o token JWT e CSRF a CADA requisição protegida
-apiClient.interceptors.request.use(
-    async (config) => {
-        pendingRequests++;
-
-        // Adicionar CSRF token para requisições de mutação
-        const needsCsrf = ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase());
-        if (needsCsrf) {
-            // Buscar token CSRF se não tiver
-            if (!csrfToken) {
-                try {
-                    await fetchCsrfToken();
-                } catch (error) {
-                    logger.warn('Não foi possível obter CSRF token:', error);
-                }
-            }
-
-            // Adicionar token CSRF ao header
-            if (csrfToken) {
-                config.headers['x-csrf-token'] = csrfToken;
-                logger.log('Token CSRF adicionado à requisição');
+// Request Interceptor
+apiClient.interceptors.request.use(async (config) => {
+    const needsCsrf = ['post', 'put', 'delete', 'patch'].includes(config.method?.toLowerCase());
+    if (needsCsrf) {
+        if (!csrfToken) {
+            try {
+                await fetchCsrfToken();
+            } catch (error) {
+                logger.warn('Não foi possível obter CSRF token:', error);
             }
         }
-
-        // Rotas de autenticação públicas que NÃO precisam de JWT
-        const publicAuthRoutes = [
-            '/auth/login',
-            '/auth/register',
-            '/auth/first-login',
-            '/auth/reset-password-with-code',
-            '/auth/reset-password',
-            '/api/csrf-token'
-        ];
-
-        // Verifica se é uma rota pública
-        const isPublicRoute = publicAuthRoutes.some(route => config.url.startsWith(route));
-
-        // Adicionar Authorization token para todas as rotas protegidas
-        // (incluindo /auth/change-password e outras rotas protegidas)
-        if (!isPublicRoute) {
-            const authStore = useAuthStore();
-            const token = authStore.token;
-
-            if (token) {
-                config.headers['Authorization'] = `Bearer ${token}`;
-                logger.log('Token JWT adicionado à requisição');
-            } else {
-                // Bloquear requisição se não tiver token em rotas protegidas
-                pendingRequests--;
-                logger.warn('Tentativa de requisição sem token');
-                return Promise.reject(new Error('Token não encontrado'));
-            }
+        if (csrfToken) {
+            config.headers['x-csrf-token'] = csrfToken;
         }
-
-        return config;
-    },
-    (error) => {
-        pendingRequests--;
-        return Promise.reject(error);
     }
-);
 
-// Interceptor: Lida com respostas e erros
+    const publicAuthRoutes = [
+        '/auth/login',
+        '/auth/register',
+        '/auth/first-login',
+        '/auth/reset-password-with-code',
+        '/auth/refresh', // Refresh route is public in a sense
+        '/api/csrf-token'
+    ];
+    const isPublicRoute = publicAuthRoutes.some(route => config.url.includes(route));
+
+    if (!isPublicRoute) {
+        const authStore = useAuthStore();
+        if (authStore.accessToken) {
+            config.headers['Authorization'] = `Bearer ${authStore.accessToken}`;
+        } else {
+            logger.warn('Tentativa de requisição protegida sem token.');
+            // This will be caught by the response interceptor if the server returns 401
+        }
+    }
+    return config;
+}, error => Promise.reject(error));
+
+// Response Interceptor
 apiClient.interceptors.response.use(
-    (response) => {
-        pendingRequests--;
+    response => response,
+    async (error) => {
+        const originalRequest = error.config;
+        const authStore = useAuthStore();
 
-        // Validar estrutura básica da resposta
-        if (!response.data && response.status !== 204) {
-            logger.warn('Resposta sem dados');
+        // Handle 401 Unauthorized errors for token refresh
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            // Prevent refresh loops if the refresh endpoint itself fails
+            if (originalRequest.url.includes('/auth/refresh')) {
+                logger.error('Refresh token falhou. Deslogando.');
+                authStore.logout();
+                return Promise.reject(error);
+            }
+
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers['Authorization'] = 'Bearer ' + token;
+                    return apiClient(originalRequest);
+                });
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            return new Promise((resolve, reject) => {
+                apiClient.post('/auth/refresh', { refreshToken: authStore.refreshToken })
+                    .then(response => {
+                        const newAccessToken = response.data.accessToken;
+                        authStore.setAuthState(newAccessToken, authStore.refreshToken);
+                        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                        processQueue(null, newAccessToken);
+                        resolve(apiClient(originalRequest));
+                    })
+                    .catch(err => {
+                        processQueue(err, null);
+                        logger.error('Não foi possível renovar o token. Deslogando.', err);
+                        authStore.logout();
+                        reject(err);
+                    })
+                    .finally(() => {
+                        isRefreshing = false;
+                    });
+            });
         }
 
-        return response;
-    },
-    (error) => {
-        pendingRequests--;
-
-        // Tratamento de erros melhorado
+        // Other error handling
         if (error.response) {
             const status = error.response.status;
-
             switch (status) {
-                case 401:
-                    // Token inválido ou expirado
-                    logger.warn('Não autorizado - redirecionando para login');
-                    const authStore = useAuthStore();
-                    authStore.logout();
-                    break;
-
                 case 403:
-                    // Pode ser CSRF token inválido - tentar renovar
-                    logger.error('Acesso negado - pode ser CSRF token inválido');
-                    const errorMessage = error.response.data?.error || '';
-                    if (errorMessage.includes('csrf') || errorMessage.includes('CSRF')) {
-                        logger.warn('Detectado erro de CSRF - renovando token');
-                        clearCsrfCookie(); // Limpa cookies antigos (importante para mobile)
-                        csrfToken = null; // Forçar renovação na próxima requisição
+                    logger.error('Acesso negado (403). Pode ser um erro de CSRF.');
+                    if (error.response.data?.error?.includes('csrf')) {
+                        logger.warn('Detectado erro de CSRF - forçando renovação.');
+                        csrfToken = null;
                     }
                     break;
-
-                case 404:
-                    logger.error('Recurso não encontrado');
-                    break;
-
-                case 422:
-                    logger.error('Dados inválidos');
-                    break;
-
-                case 429:
-                    logger.error('Muitas requisições - aguarde antes de tentar novamente');
-                    break;
-
-                case 500:
-                case 502:
-                case 503:
-                    logger.error('Erro no servidor - tente novamente mais tarde');
-                    break;
-
-                default:
-                    logger.error(`Erro ${status}`);
+                case 404: logger.error('Recurso não encontrado (404)'); break;
+                case 422: logger.error('Dados inválidos (422)'); break;
+                case 429: logger.error('Muitas requisições (429)'); break;
+                case 500: case 502: case 503: logger.error('Erro no servidor (5xx)'); break;
             }
         } else if (error.code === 'ECONNABORTED') {
-            logger.error('Requisição expirou - timeout');
+            logger.error('Requisição expirou (timeout).');
         } else if (error.message === 'Network Error') {
-            logger.error('Erro de conexão - verifique sua internet');
-        } else if (error.message === 'Token não encontrado') {
-            // Erro customizado do interceptor de request
-            logger.error('Token ausente para rota protegida');
+            logger.error('Erro de conexão.');
         }
 
         return Promise.reject(error);
     }
 );
 
-// Exportar função para verificar requisições pendentes
-export const hasPendingRequests = () => pendingRequests > 0;
-
 export default apiClient;
-
