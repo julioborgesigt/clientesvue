@@ -9,7 +9,7 @@
       <v-btn @click="handleOpenModal('editVencidoMessage')">Msg. Vencido</v-btn>
     </v-toolbar-items>
     <v-spacer></v-spacer>
-    <v-btn @click="navigateToAdmin" icon>
+    <v-btn v-if="authStore.isAdmin" @click="navigateToAdmin" icon>
       <v-icon>mdi-shield-crown</v-icon>
       <v-tooltip activator="parent" location="bottom">Painel de Administração</v-tooltip>
     </v-btn>

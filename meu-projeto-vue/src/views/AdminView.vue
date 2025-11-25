@@ -4,11 +4,13 @@
 
     <v-spacer></v-spacer>
 
-    <v-btn icon="mdi-view-dashboard" @click="navigateToDashboard">
+    <v-btn icon @click="navigateToDashboard">
+      <v-icon>mdi-view-dashboard</v-icon>
       <v-tooltip activator="parent" location="bottom">Voltar ao Dashboard</v-tooltip>
     </v-btn>
 
-    <v-btn icon="mdi-logout" @click="handleLogout">
+    <v-btn icon @click="handleLogout">
+      <v-icon>mdi-logout</v-icon>
       <v-tooltip activator="parent" location="bottom">Sair</v-tooltip>
     </v-btn>
   </v-app-bar>
@@ -30,17 +32,19 @@
         <v-card elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
             <div class="d-flex align-center">
-              <v-icon icon="mdi-heart-pulse" class="me-2" color="error"></v-icon>
+              <v-icon class="me-2" color="error">mdi-heart-pulse</v-icon>
               <span>Status do Sistema</span>
             </div>
             <v-btn
-              icon="mdi-refresh"
+              icon
               variant="text"
               size="small"
               @click="refreshHealthStatus"
               :loading="isLoadingHealth"
               color="info"
-            ></v-btn>
+            >
+              <v-icon>mdi-refresh</v-icon>
+            </v-btn>
           </v-card-title>
 
           <v-card-text>
@@ -116,7 +120,7 @@
         <v-card elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
             <div class="d-flex align-center">
-              <v-icon icon="mdi-database" class="me-2" color="info"></v-icon>
+              <v-icon class="me-2" color="info">mdi-database</v-icon>
               <span>Gerenciamento de Backups</span>
               <v-chip size="small" class="ms-2" v-if="backupStore.backups.length > 0">
                 {{ backupStore.backups.length }} {{ backupStore.backups.length === 1 ? 'backup' : 'backups' }}
@@ -133,18 +137,20 @@
                 Criar Backup
               </v-btn>
               <v-btn
-                icon="mdi-refresh"
+                icon
                 variant="text"
                 size="small"
                 @click="refreshBackups"
                 :loading="backupStore.isLoading"
                 color="info"
-              ></v-btn>
+              >
+                <v-icon>mdi-refresh</v-icon>
+              </v-btn>
             </div>
           </v-card-title>
 
           <v-card-subtitle v-if="backupStore.config" class="ps-4 pb-2">
-            <v-icon icon="mdi-information-outline" size="16" class="me-1"></v-icon>
+            <v-icon size="16" class="me-1">mdi-information-outline</v-icon>
             Backups automáticos {{ backupStore.config.enabled ? 'ativados' : 'desativados' }}
             •
             Retenção: {{ backupStore.config.retention || 'N/A' }} dias
@@ -168,7 +174,7 @@
               class="mt-2"
             >
               <template v-slot:prepend>
-                <v-icon icon="mdi-information-outline"></v-icon>
+                <v-icon>mdi-information-outline</v-icon>
               </template>
               Nenhum backup disponível. Crie um backup manual ou aguarde o backup automático.
             </v-alert>
@@ -203,21 +209,23 @@
 
               <template v-slot:item.actions="{ item }">
                 <v-btn
-                  icon="mdi-download"
+                  icon
                   variant="text"
                   size="small"
                   @click="downloadBackup(item.filename)"
                   color="info"
                 >
+                  <v-icon>mdi-download</v-icon>
                   <v-tooltip activator="parent" location="top">Download</v-tooltip>
                 </v-btn>
                 <v-btn
-                  icon="mdi-delete"
+                  icon
                   variant="text"
                   size="small"
                   @click="confirmDelete(item)"
                   color="error"
                 >
+                  <v-icon>mdi-delete</v-icon>
                   <v-tooltip activator="parent" location="top">Excluir</v-tooltip>
                 </v-btn>
               </template>
@@ -232,7 +240,7 @@
   <v-dialog v-model="deleteDialog" max-width="400">
     <v-card>
       <v-card-title class="text-h6">
-        <v-icon icon="mdi-alert" color="warning" class="me-2"></v-icon>
+        <v-icon color="warning" class="me-2">mdi-alert</v-icon>
         Confirmar Exclusão
       </v-card-title>
       <v-card-text>
