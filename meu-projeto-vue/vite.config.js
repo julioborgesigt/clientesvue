@@ -13,30 +13,12 @@ export default defineConfig({
     },
   },
 
-  // Proxy para desenvolvimento (evita erro de CORS)
+  // PROXY REMOVIDO: O axios já faz requisições diretas para o backend
+  // As rotas /auth, /clientes, /servicos são do Vue Router (UI), NÃO devem ter proxy
+  // Manter proxy causava erro 404 ao atualizar a página em rotas do Vue Router
+  // O backend já tem CORS configurado, então não precisamos de proxy
   server: {
-    proxy: {
-      '/api': {
-        target: 'https://clientes.domcloud.dev',
-        changeOrigin: true,
-        secure: true,
-      },
-      '/auth': {
-        target: 'https://clientes.domcloud.dev',
-        changeOrigin: true,
-        secure: true,
-      },
-      '/clientes': {
-        target: 'https://clientes.domcloud.dev',
-        changeOrigin: true,
-        secure: true,
-      },
-      '/servicos': {
-        target: 'https://clientes.domcloud.dev',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
+    // Sem proxy - axios faz requisições diretas para https://clientes.domcloud.dev
   },
 
   // Configuração de build para produção

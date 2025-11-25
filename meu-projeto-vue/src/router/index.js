@@ -7,34 +7,66 @@ import { useAuthStore } from '@/stores/authStore';
  * Cada view é carregada apenas quando a rota é acessada
  * Reduz o bundle inicial em ~30%
  */
-const LoginView = () => import('../views/LoginView.vue');
-const RegisterView = () => import('../views/RegisterView.vue');
-const FirstLoginView = () => import('../views/FirstLoginView.vue');
-const ForgotPasswordView = () => import('../views/ForgotPasswordView.vue');
+const AuthView = () => import('../views/AuthView.vue');
+const LoginForm = () => import('../components/auth/LoginForm.vue');
+const RegisterForm = () => import('../components/auth/RegisterForm.vue');
+const RecoveryCodeForm = () => import('../components/auth/RecoveryCodeForm.vue');
+const FirstLoginForm = () => import('../components/auth/FirstLoginForm.vue');
+const ForgotPasswordForm = () => import('../components/auth/ForgotPasswordForm.vue');
 const DashboardView = () => import('../views/DashboardView.vue');
 const AdminView = () => import('../views/AdminView.vue');
 
 const routes = [
+    // Rotas de Autenticação - Container Unificado
+    {
+        path: '/auth',
+        component: AuthView,
+        children: [
+            {
+                path: 'login',
+                name: 'Login',
+                component: LoginForm,
+            },
+            {
+                path: 'register',
+                name: 'Register',
+                component: RegisterForm,
+            },
+            {
+                path: 'recovery-code',
+                name: 'RecoveryCode',
+                component: RecoveryCodeForm,
+            },
+            {
+                path: 'first-login',
+                name: 'FirstLogin',
+                component: FirstLoginForm,
+            },
+            {
+                path: 'forgot-password',
+                name: 'ForgotPassword',
+                component: ForgotPasswordForm,
+            },
+        ],
+    },
+    // Redirecionamentos para compatibilidade
     {
         path: '/login',
-        name: 'Login',
-        component: LoginView,
+        redirect: '/auth/login',
     },
     {
         path: '/register',
-        name: 'Register',
-        component: RegisterView,
+        redirect: '/auth/register',
     },
     {
         path: '/first-login',
-        name: 'FirstLogin',
-        component: FirstLoginView,
+        redirect: '/auth/first-login',
     },
     {
         path: '/forgot-password',
-        name: 'ForgotPassword',
-        component: ForgotPasswordView,
+        redirect: '/auth/forgot-password',
     },
+    // Rotas Protegidas
     {
         path: '/dashboard',
         name: 'Dashboard',
@@ -49,8 +81,12 @@ const routes = [
     },
     // Redirecionamento padrão
     {
+        path: '/',
+        redirect: '/auth/login',
+    },
+    {
         path: '/:pathMatch(.*)*',
-        redirect: '/dashboard',
+        redirect: '/auth/login',
     },
 ];
 
@@ -59,16 +95,20 @@ const router = createRouter({
     routes,
 });
 
-// "Guarda de Rota" - Protege a rota /dashboard
+// "Guarda de Rota" - Protege rotas autenticadas
 router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
     const isAuthenticated = authStore.isAuthenticated;
 
+    // Rotas de autenticação
+    const authPaths = ['/auth/login', '/auth/register', '/auth/recovery-code', '/auth/first-login', '/auth/forgot-password'];
+    const isAuthRoute = authPaths.includes(to.path);
+
     if (to.meta.requiresAuth && !isAuthenticated) {
         // Se a rota exige auth e o usuário não está logado, vá para o login
-        next('/login');
-    } else if (to.path === '/login' && isAuthenticated) {
-        // Se o usuário está logado e tenta ir para o login, vá para o dashboard
+        next('/auth/login');
+    } else if (isAuthRoute && isAuthenticated) {
+        // Se o usuário está logado e tenta acessar rotas de auth, vá para o dashboard
         next('/dashboard');
     } else {
         // Caso contrário, permita a navegação

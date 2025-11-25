@@ -117,8 +117,24 @@ export const useAuthStore = defineStore('auth', {
                 router.push('/dashboard');
             } catch (error) {
                 logger.error('Erro no login:', error);
-                // Mensagem genérica para não expor detalhes
-                const message = 'Falha na autenticação. Verifique suas credenciais e tente novamente.';
+
+                // Detecta se é primeiro login não completado
+                if (error.response?.status === 403 &&
+                    error.response?.data?.error?.toLowerCase().includes('primeiro login')) {
+
+                    notificationStore.warning('⚠️ Você precisa completar o primeiro login com seu código de recuperação.');
+
+                    // 🔒 SEGURANÇA: Usa state ao invés de query para não expor email na URL
+                    router.push({
+                        name: 'FirstLogin',
+                        state: { email: email.trim().toLowerCase() }
+                    });
+
+                    throw error;
+                }
+
+                // Mensagem genérica para outros erros
+                const message = error.response?.data?.error || 'Falha na autenticação. Verifique suas credenciais e tente novamente.';
                 notificationStore.error(message);
                 throw error;
             }
