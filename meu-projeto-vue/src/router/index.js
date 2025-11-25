@@ -2,6 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore'; // Importar notificationStore
+import { logger } from '@/utils/logger';
 
 const AuthView = () => import('../views/AuthView.vue');
 const LoginForm = () => import('../components/auth/LoginForm.vue');
@@ -60,7 +61,24 @@ router.beforeEach((to, from, next) => {
 
     // 1. Rota requer admin e usuário não é admin
     if (to.meta.requiresAdmin && !isAdmin) {
-        notificationStore.error('Você não tem permissão para acessar esta página.');
+        const userEmail = authStore.user?.email || 'desconhecido';
+
+        // Mensagem mais informativa para o usuário
+        let errorMessage = '🔒 Acesso Negado ao Painel de Administrador\n\n';
+
+        if (authStore.user) {
+            errorMessage += `Você está logado como: ${userEmail}\n\n`;
+            errorMessage += 'Motivo: Apenas o e-mail configurado como ADMIN_EMAIL no servidor pode acessar esta área.\n\n';
+            errorMessage += '💡 Soluções possíveis:\n';
+            errorMessage += '• Verifique se está usando o e-mail de administrador correto\n';
+            errorMessage += '• Se você alterou o ADMIN_EMAIL no servidor, faça logout e login novamente\n';
+            errorMessage += '• Confirme que a variável ADMIN_EMAIL está configurada corretamente no .env do servidor';
+        } else {
+            errorMessage += 'Você precisa estar logado com uma conta de administrador para acessar esta página.';
+        }
+
+        notificationStore.error(errorMessage);
+        logger.warn(`Tentativa de acesso admin negada para o usuário: ${userEmail}`);
         return next('/dashboard'); // Redireciona para um local seguro
     }
 

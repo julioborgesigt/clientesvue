@@ -70,7 +70,7 @@ export const useAuthStore = defineStore('auth', {
          * @returns {boolean} True se for administrador.
          */
         isAdmin: (state) => {
-            return !!state.user && state.user.role === 'admin';
+            return !!state.user && state.user.AdminIsTrue === true;
         },
     },
 
