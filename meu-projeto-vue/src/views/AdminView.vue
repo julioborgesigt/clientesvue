@@ -4,11 +4,11 @@
 
     <v-spacer></v-spacer>
 
-    <v-btn icon="mdi-view-dashboard" @click="navigateToDashboard">
+    <v-btn icon="mdi-view-dashboard" @click="navigateToDashboard" color="white">
       <v-tooltip activator="parent" location="bottom">Voltar ao Dashboard</v-tooltip>
     </v-btn>
 
-    <v-btn icon="mdi-logout" @click="handleLogout">
+    <v-btn icon="mdi-logout" @click="handleLogout" color="white">
       <v-tooltip activator="parent" location="bottom">Sair</v-tooltip>
     </v-btn>
   </v-app-bar>
@@ -39,6 +39,7 @@
               size="small"
               @click="refreshHealthStatus"
               :loading="isLoadingHealth"
+              color="info"
             ></v-btn>
           </v-card-title>
 
@@ -115,7 +116,7 @@
         <v-card elevation="2">
           <v-card-title class="d-flex justify-space-between align-center">
             <div class="d-flex align-center">
-              <v-icon icon="mdi-database" class="me-2" color="primary"></v-icon>
+              <v-icon icon="mdi-database" class="me-2" color="info"></v-icon>
               <span>Gerenciamento de Backups</span>
               <v-chip size="small" class="ms-2" v-if="backupStore.backups.length > 0">
                 {{ backupStore.backups.length }} {{ backupStore.backups.length === 1 ? 'backup' : 'backups' }}
@@ -124,7 +125,7 @@
             <div class="d-flex gap-2">
               <v-btn
                 prepend-icon="mdi-plus"
-                color="primary"
+                color="success"
                 @click="createBackup"
                 :loading="backupStore.isCreating"
                 size="small"
@@ -137,6 +138,7 @@
                 size="small"
                 @click="refreshBackups"
                 :loading="backupStore.isLoading"
+                color="info"
               ></v-btn>
             </div>
           </v-card-title>
@@ -205,7 +207,7 @@
                   variant="text"
                   size="small"
                   @click="downloadBackup(item.filename)"
-                  color="primary"
+                  color="info"
                 >
                   <v-tooltip activator="parent" location="top">Download</v-tooltip>
                 </v-btn>

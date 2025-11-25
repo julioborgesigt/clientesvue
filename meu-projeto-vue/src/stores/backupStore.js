@@ -201,7 +201,18 @@ export const useBackupStore = defineStore('backup', {
             try {
                 const response = await apiClient.get('/backup/config/status');
                 console.log('⚙️ Backup Config Response:', response.data);
-                this.config = response.data;
+
+                // Mapear campos do backend para formato esperado pelo frontend
+                if (response.data && response.data.config) {
+                    this.config = {
+                        enabled: response.data.config.autoBackupEnabled || false,
+                        retention: response.data.config.retention || null
+                    };
+                } else {
+                    this.config = response.data;
+                }
+
+                console.log('✅ Config mapeado:', this.config);
             } catch (error) {
                 console.error('❌ Erro ao buscar config de backup:', error.response?.data || error.message);
                 this.config = null;
