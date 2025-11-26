@@ -46,9 +46,9 @@
 
   <!-- Conteúdo Principal -->
   <v-container v-if="!clientStore.isDashboardLoading" fluid class="pa-4">
-    
-    <!-- Estado Vazio -->
-    <div v-if="clientStore.clients.length === 0" class="mt-16">
+
+    <!-- Estado Vazio: Apenas quando realmente não há clientes E não há busca/filtro ativo -->
+    <div v-if="isReallyEmpty" class="mt-16">
       <EmptyState
         title="Nenhum cliente encontrado"
         description="Parece que você ainda não tem clientes cadastrados. Comece adicionando o primeiro!"
@@ -63,7 +63,7 @@
       </EmptyState>
     </div>
 
-    <!-- Conteúdo do Dashboard (quando há clientes) -->
+    <!-- Conteúdo do Dashboard (quando há clientes OU há busca/filtro ativo) -->
     <div v-else>
       <DashboardStats 
         :stats="clientStore.stats" 
@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useClientStore } from '@/stores/clientStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -186,6 +186,14 @@ import EmptyState from '@/components/ui/EmptyState.vue'; // Importar EmptyState
 const router = useRouter();
 const clientStore = useClientStore();
 const authStore = useAuthStore();
+
+// Verifica se realmente está vazio (sem clientes) ou se é apenas uma busca/filtro sem resultados
+const isReallyEmpty = computed(() => {
+  // Se não há clientes E não há busca/filtro ativo, então está realmente vazio
+  return clientStore.clients.length === 0 &&
+         !clientStore.searchQuery &&
+         !clientStore.statusFilter;
+});
 
 const { mobile } = useDisplay();
 const showPaymentChart = ref(!mobile.value);
