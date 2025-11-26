@@ -124,13 +124,13 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 logger.error('Erro no login:', error);
                 if (error.response?.status === 403 && error.response?.data?.error?.toLowerCase().includes('primeiro login')) {
-                    notificationStore.warning('⚠️ Você precisa completar o primeiro login com seu código de recuperação.');
+                    notificationStore.warning('Complete o primeiro login com seu código de recuperação.');
                     router.push({
                         name: 'FirstLogin',
                         state: { email: email.trim().toLowerCase() },
                     });
                 } else {
-                    const message = error.response?.data?.error || 'Falha na autenticação. Verifique suas credenciais.';
+                    const message = error.response?.data?.error || 'Email ou senha incorretos.';
                     notificationStore.error(message);
                 }
                 throw error;
@@ -187,11 +187,11 @@ export const useAuthStore = defineStore('auth', {
                 this.setAuthState(response.data.accessToken, response.data.refreshToken);
 
                 logger.log('Primeiro login concluído com sucesso');
-                notificationStore.success('Primeiro login concluído! Bem-vindo ao sistema.');
+                notificationStore.success('Bem-vindo ao sistema!');
                 router.push('/dashboard');
             } catch (error) {
                 logger.error('Erro no primeiro login:', error);
-                const message = error.response?.data?.error || 'Falha no primeiro login. Verifique seus dados.';
+                const message = error.response?.data?.error || 'Código de recuperação inválido.';
                 notificationStore.error(message);
                 throw error;
             }
@@ -214,11 +214,11 @@ export const useAuthStore = defineStore('auth', {
                 });
 
                 logger.log('Senha resetada com sucesso');
-                notificationStore.success(response.data.message || 'Senha resetada com sucesso!');
+                notificationStore.success(response.data.message || 'Senha alterada com sucesso!');
                 return true;
             } catch (error) {
                 logger.error('Erro ao resetar senha:', error);
-                const message = error.response?.data?.error || 'Erro ao resetar senha. Verifique seus dados.';
+                const message = error.response?.data?.error || 'Código de recuperação inválido.';
                 notificationStore.error(message);
                 throw error;
             }
@@ -240,7 +240,7 @@ export const useAuthStore = defineStore('auth', {
                 });
 
                 logger.log('Senha alterada com sucesso');
-                notificationStore.success(response.data.message || 'Senha alterada com sucesso!');
+                notificationStore.success(response.data.message || 'Senha alterada! Faça login novamente.');
 
                 setTimeout(() => {
                     this.logout();
@@ -249,7 +249,7 @@ export const useAuthStore = defineStore('auth', {
                 return true;
             } catch (error) {
                 logger.error('Erro ao alterar senha:', error);
-                const message = error.response?.data?.error || 'Erro ao alterar senha.';
+                const message = error.response?.data?.error || 'Senha atual incorreta.';
                 notificationStore.error(message);
                 throw error;
             }

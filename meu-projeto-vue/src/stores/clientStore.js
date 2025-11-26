@@ -90,7 +90,7 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 const response = await apiClient.put(`/servicos/${serviceId}`, { nome: newName });
-                notificationStore.success(response.data.message || 'Serviço atualizado com sucesso!');
+                notificationStore.success(response.data.message || 'Serviço atualizado!');
                 const index = this.servicos.findIndex(s => s.id === serviceId);
                 if (index !== -1) {
                     this.servicos[index].nome = newName.trim();
@@ -99,7 +99,7 @@ export const useClientStore = defineStore('client', {
                 await this.fetchClients();
                 return true;
             } catch (error) {
-                notificationStore.error(error.response?.data?.error || 'Erro ao editar serviço.');
+                notificationStore.error(error.response?.data?.error || 'Erro ao atualizar serviço.');
                 return false;
             }
         },
@@ -143,11 +143,11 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 const response = await apiClient.post(`/clientes/actions/${logId}/revert`);
-                notificationStore.success(response.data.message || 'Ação revertida com sucesso!');
+                notificationStore.success(response.data.message || 'Ação revertida!');
                 await this._refreshAfterMutation(); // Otimizado
                 return true;
             } catch (error) {
-                notificationStore.error(error.response?.data?.error || 'Erro ao reverter ação.');
+                notificationStore.error(error.response?.data?.error || 'Erro ao reverter. Tente novamente.');
                 await this.fetchRecentActions();
                 return false;
             }
@@ -198,7 +198,7 @@ export const useClientStore = defineStore('client', {
                 const response = await apiClient.post('/servicos', { nome: nomeServico });
                 this.servicos.push({ id: response.data.id, nome: response.data.nome });
                 this.servicos.sort((a, b) => a.nome.localeCompare(b.nome));
-                notificationStore.success('Serviço adicionado com sucesso!');
+                notificationStore.success('Serviço adicionado!');
                 return true;
             } catch (error) {
                 notificationStore.error(error.response?.data?.error || 'Erro ao adicionar serviço.');
@@ -211,7 +211,7 @@ export const useClientStore = defineStore('client', {
             try {
                 await apiClient.delete(`/servicos/${serviceId}`);
                 this.servicos = this.servicos.filter(s => s.id !== serviceId);
-                notificationStore.success('Serviço excluído com sucesso!');
+                notificationStore.success('Serviço excluído!');
                 return true;
             } catch (error) {
                 notificationStore.error(error.response?.data?.error || 'Erro ao excluir serviço.');
@@ -278,10 +278,10 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.put(`/clientes/mark-${statusAction}/${id}`);
-                notificationStore.success('Status do cliente atualizado com sucesso!');
+                notificationStore.success('Status atualizado!');
                 await this._refreshAfterMutation(); // Otimizado
             } catch (error) {
-                notificationStore.error('Erro ao atualizar status do cliente.');
+                notificationStore.error('Erro ao atualizar status. Tente novamente.');
             }
         },
 
@@ -289,10 +289,10 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.put(`/clientes/archive/${id}`);
-                notificationStore.success('Cliente arquivado com sucesso!');
+                notificationStore.success('Cliente arquivado!');
                 await this._refreshAfterMutation(); // Otimizado
             } catch (error) {
-                notificationStore.error('Erro ao arquivar cliente.');
+                notificationStore.error('Erro ao arquivar. Tente novamente.');
             }
         },
 
@@ -300,10 +300,10 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.put(`/clientes/unarchive/${id}`);
-                notificationStore.success('Cliente desarquivado com sucesso!');
+                notificationStore.success('Cliente desarquivado!');
                 await this._refreshAfterMutation(); // Otimizado
             } catch (error) {
-                notificationStore.error('Erro ao desarquivar cliente.');
+                notificationStore.error('Erro ao desarquivar. Tente novamente.');
             }
         },
 
@@ -311,10 +311,10 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.put(`/clientes/adjust-date/${id}`, { value, unit });
-                notificationStore.success('Data do cliente ajustada com sucesso!');
+                notificationStore.success('Data ajustada!');
                 await this._refreshAfterMutation(); // Otimizado
             } catch (error) {
-                notificationStore.error('Erro ao ajustar data do cliente.');
+                notificationStore.error('Erro ao ajustar data. Tente novamente.');
             }
         },
 
@@ -322,10 +322,10 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.delete(`/clientes/delete/${id}`);
-                notificationStore.success('Cliente deletado com sucesso!');
+                notificationStore.success('Cliente excluído!');
                 await this._refreshAfterMutation(); // Otimizado
             } catch (error) {
-                notificationStore.error('Erro ao deletar cliente.');
+                notificationStore.error('Erro ao excluir. Tente novamente.');
             }
         },
         
@@ -360,10 +360,10 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.post('/clientes/add', clientData);
-                notificationStore.success('Cliente adicionado com sucesso!');
+                notificationStore.success('Cliente cadastrado!');
                 await this._refreshAfterMutation(); // Otimizado
             } catch (error) {
-                notificationStore.error('Erro ao adicionar cliente.');
+                notificationStore.error('Erro ao cadastrar cliente. Verifique os dados.');
             }
         },
         
@@ -382,9 +382,9 @@ export const useClientStore = defineStore('client', {
             try {
                 const endpoint = type === 'vencido' ? '/clientes/save-message-vencido' : '/clientes/save-message';
                 const response = await apiClient.post(endpoint, { message });
-                notificationStore.success(response.data.message);
+                notificationStore.success(response.data.message || 'Mensagem salva!');
             } catch (error) {
-                notificationStore.error('Erro ao salvar mensagem.');
+                notificationStore.error('Erro ao salvar. Tente novamente.');
             }
         },
 
@@ -392,11 +392,11 @@ export const useClientStore = defineStore('client', {
             const notificationStore = useNotificationStore();
             try {
                 await apiClient.put(`/clientes/update/${clientId}`, clientData);
-                notificationStore.success('Cliente atualizado com sucesso!');
+                notificationStore.success('Cliente atualizado!');
                 // Ações de atualização e de log são as mais importantes aqui
                 await Promise.all([this.fetchClients(), this.fetchRecentActions()]);
             } catch (error) {
-                notificationStore.error('Erro ao atualizar cliente.');
+                notificationStore.error('Erro ao atualizar. Verifique os dados.');
             }
         }
     },

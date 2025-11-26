@@ -88,21 +88,9 @@ export const useBackupStore = defineStore('backup', {
 
                 // Tratamento específico para erro 403 (permissão negada)
                 if (error.response?.status === 403) {
-                    const errorData = error.response.data;
-                    let message = '🔒 Acesso Negado\n\n';
-
-                    if (errorData.details) {
-                        message += `${errorData.message}\n\n`;
-                        message += `👤 Usuário logado: ${errorData.details.userEmail}\n`;
-                        message += `🔑 E-mail admin configurado: ${errorData.details.adminEmailHint}\n\n`;
-                        message += `💡 ${errorData.details.explanation}`;
-                    } else {
-                        message += errorData.message || 'Você não tem permissão para acessar backups.';
-                    }
-
-                    notificationStore.error(message);
+                    notificationStore.error('Acesso negado. Apenas administradores podem visualizar backups.');
                 } else {
-                    notificationStore.error('Erro ao buscar lista de backups.');
+                    notificationStore.error('Erro ao carregar backups. Tente novamente.');
                 }
 
                 this.backups = [];
@@ -131,23 +119,10 @@ export const useBackupStore = defineStore('backup', {
             } catch (error) {
                 // Tratamento específico para erro 403 (permissão negada)
                 if (error.response?.status === 403) {
-                    const errorData = error.response.data;
-                    let message = '🔒 Acesso Negado\n\n';
-
-                    if (errorData.details) {
-                        message += `${errorData.message}\n\n`;
-                        message += `👤 Usuário logado: ${errorData.details.userEmail}\n`;
-                        message += `🔑 E-mail admin configurado: ${errorData.details.adminEmailHint}\n\n`;
-                        message += `💡 ${errorData.details.explanation}`;
-                    } else {
-                        message += errorData.message || 'Você não tem permissão para criar backups.';
-                    }
-
-                    notificationStore.error(message);
+                    notificationStore.error('Acesso negado. Apenas administradores podem criar backups.');
                 } else {
-                    notificationStore.error(
-                        error.response?.data?.error || 'Erro ao criar backup.'
-                    );
+                    const errorMsg = error.response?.data?.error || 'Erro ao criar backup. Tente novamente.';
+                    notificationStore.error(errorMsg);
                 }
                 return false;
             } finally {
@@ -194,23 +169,10 @@ export const useBackupStore = defineStore('backup', {
 
                 // Tratamento específico para erro 403 (permissão negada)
                 if (error.response?.status === 403) {
-                    const errorData = error.response.data;
-                    let message = '🔒 Acesso Negado\n\n';
-
-                    if (errorData.details) {
-                        message += `${errorData.message}\n\n`;
-                        message += `👤 Usuário logado: ${errorData.details.userEmail}\n`;
-                        message += `🔑 E-mail admin configurado: ${errorData.details.adminEmailHint}\n\n`;
-                        message += `💡 ${errorData.details.explanation}`;
-                    } else {
-                        message += errorData.message || 'Você não tem permissão para baixar backups.';
-                    }
-
-                    notificationStore.error(message);
+                    notificationStore.error('Acesso negado. Apenas administradores podem baixar backups.');
                 } else {
-                    notificationStore.error(
-                        error.response?.data?.error || 'Erro ao baixar backup.'
-                    );
+                    const errorMsg = error.response?.data?.error || 'Erro ao baixar backup. Tente novamente.';
+                    notificationStore.error(errorMsg);
                 }
                 return false;
             }
@@ -240,23 +202,10 @@ export const useBackupStore = defineStore('backup', {
 
                 // Tratamento específico para erro 403 (permissão negada)
                 if (error.response?.status === 403) {
-                    const errorData = error.response.data;
-                    let message = '🔒 Acesso Negado\n\n';
-
-                    if (errorData.details) {
-                        message += `${errorData.message}\n\n`;
-                        message += `👤 Usuário logado: ${errorData.details.userEmail}\n`;
-                        message += `🔑 E-mail admin configurado: ${errorData.details.adminEmailHint}\n\n`;
-                        message += `💡 ${errorData.details.explanation}`;
-                    } else {
-                        message += errorData.message || 'Você não tem permissão para excluir backups.';
-                    }
-
-                    notificationStore.error(message);
+                    notificationStore.error('Acesso negado. Apenas administradores podem excluir backups.');
                 } else {
-                    notificationStore.error(
-                        error.response?.data?.error || 'Erro ao excluir backup.'
-                    );
+                    const errorMsg = error.response?.data?.error || 'Erro ao excluir backup. Tente novamente.';
+                    notificationStore.error(errorMsg);
                 }
                 return false;
             }

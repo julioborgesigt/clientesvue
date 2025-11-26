@@ -63,23 +63,16 @@ router.beforeEach((to, from, next) => {
     if (to.meta.requiresAdmin && !isAdmin) {
         const userEmail = authStore.user?.email || 'desconhecido';
 
-        // Mensagem mais informativa para o usuário
-        let errorMessage = '🔒 Acesso Negado ao Painel de Administrador\n\n';
-
         if (authStore.user) {
-            errorMessage += `Você está logado como: ${userEmail}\n\n`;
-            errorMessage += 'Motivo: Apenas o e-mail configurado como ADMIN_EMAIL no servidor pode acessar esta área.\n\n';
-            errorMessage += '💡 Soluções possíveis:\n';
-            errorMessage += '• Verifique se está usando o e-mail de administrador correto\n';
-            errorMessage += '• Se você alterou o ADMIN_EMAIL no servidor, faça logout e login novamente\n';
-            errorMessage += '• Confirme que a variável ADMIN_EMAIL está configurada corretamente no .env do servidor';
+            notificationStore.error(
+                `Acesso negado. Apenas administradores podem acessar esta área.`
+            );
         } else {
-            errorMessage += 'Você precisa estar logado com uma conta de administrador para acessar esta página.';
+            notificationStore.error('Você precisa estar logado como administrador.');
         }
 
-        notificationStore.error(errorMessage);
         logger.warn(`Tentativa de acesso admin negada para o usuário: ${userEmail}`);
-        return next('/dashboard'); // Redireciona para um local seguro
+        return next('/dashboard');
     }
 
     // 2. Rota requer autenticação e usuário não está logado
