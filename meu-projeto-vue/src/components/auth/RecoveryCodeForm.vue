@@ -87,6 +87,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { logger } from '@/utils/logger';
 
 const router = useRouter();
 const route = useRoute();
@@ -124,10 +125,10 @@ onMounted(() => {
   userEmail.value = state.email || '';
 
   // Debug: Verifica os dados recebidos
-  console.log('RecoveryCodeForm montado com:');
-  console.log('- Código:', recoveryCode.value ? 'Presente (oculto)' : 'Ausente');
-  console.log('- Email:', userEmail.value);
-  console.log('- Source:', state.code ? 'Router State (seguro)' : 'Não encontrado');
+  logger.debug('RecoveryCodeForm montado com:');
+  logger.debug('- Código:', recoveryCode.value ? 'Presente (oculto)' : 'Ausente');
+  logger.debug('- Email:', userEmail.value);
+  logger.debug('- Source:', state.code ? 'Router State (seguro)' : 'Não encontrado');
 
   // Se não tiver código, redireciona para registro
   if (!recoveryCode.value) {
@@ -137,7 +138,7 @@ onMounted(() => {
 
   // Aviso se não tiver email
   if (!userEmail.value) {
-    console.warn('AVISO: Email não foi fornecido!');
+    logger.warn('AVISO: Email não foi fornecido!');
   }
 });
 
@@ -262,7 +263,7 @@ function goToFirstLogin() {
   }
 
   // Log para debug
-  console.log('Navegando para primeiro login com email:', userEmail.value);
+  logger.debug('Navegando para primeiro login com email:', userEmail.value);
 
   try {
     // 🔒 SEGURANÇA: Usa state ao invés de query para não expor email na URL
@@ -271,9 +272,9 @@ function goToFirstLogin() {
       state: { email: userEmail.value }
     });
 
-    console.log('Navegação iniciada com sucesso');
+    logger.debug('Navegação iniciada com sucesso');
   } catch (error) {
-    console.error('Erro ao navegar para primeiro login:', error);
+    logger.error('Erro ao navegar para primeiro login:', error);
     notificationStore.error('Erro ao redirecionar. Tente novamente.');
   }
 }
