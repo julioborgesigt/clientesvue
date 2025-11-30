@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia';
 import apiClient from '@/api/axios';
 import { useNotificationStore } from './notificationStore';
+import { logger } from '@/utils/logger';
 
 /**
  * Store de Backups
@@ -79,11 +80,11 @@ export const useBackupStore = defineStore('backup', {
             this.isLoading = true;
             try {
                 const response = await apiClient.get('/backup');
-                console.log('💾 Backups Response:', response.data);
+                logger.debug('Backups Response:', response.data);
                 this.backups = response.data.backups || [];
-                console.log('📋 Backups carregados:', this.backups.length, 'backup(s)');
+                logger.debug('Backups carregados:', this.backups.length, 'backup(s)');
             } catch (error) {
-                console.error('❌ Erro ao buscar backups:', error.response?.data || error.message);
+                logger.error('Erro ao buscar backups:', error.response?.data || error.message);
                 const notificationStore = useNotificationStore();
 
                 // Tratamento específico para erro 403 (permissão negada)
@@ -141,14 +142,14 @@ export const useBackupStore = defineStore('backup', {
         async downloadBackup(filename) {
             const notificationStore = useNotificationStore();
             try {
-                console.log('⬇️ Iniciando download do backup:', filename);
+                logger.debug('Iniciando download do backup:', filename);
                 notificationStore.info('Iniciando download...');
 
                 const response = await apiClient.get(`/backup/${filename}`, {
                     responseType: 'blob' // Importante para download de arquivos
                 });
 
-                console.log('✅ Backup baixado, tamanho:', response.data.size, 'bytes');
+                logger.debug('Backup baixado, tamanho:', response.data.size, 'bytes');
 
                 // Cria um link temporário para download
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -165,7 +166,7 @@ export const useBackupStore = defineStore('backup', {
                 notificationStore.success('Download concluído!');
                 return true;
             } catch (error) {
-                console.error('❌ Erro ao baixar backup:', error.response?.data || error.message);
+                logger.error('Erro ao baixar backup:', error.response?.data || error.message);
 
                 // Tratamento específico para erro 403 (permissão negada)
                 if (error.response?.status === 403) {
@@ -189,16 +190,16 @@ export const useBackupStore = defineStore('backup', {
         async deleteBackup(filename) {
             const notificationStore = useNotificationStore();
             try {
-                console.log('🗑️ Excluindo backup:', filename);
+                logger.debug('Excluindo backup:', filename);
                 const response = await apiClient.delete(`/backup/${filename}`);
-                console.log('✅ Backup excluído com sucesso');
+                logger.debug('Backup excluído com sucesso');
                 notificationStore.success(response.data.message || 'Backup excluído com sucesso!');
 
                 // Recarrega a lista de backups
                 await this.fetchBackups();
                 return true;
             } catch (error) {
-                console.error('❌ Erro ao excluir backup:', error.response?.data || error.message);
+                logger.error('Erro ao excluir backup:', error.response?.data || error.message);
 
                 // Tratamento específico para erro 403 (permissão negada)
                 if (error.response?.status === 403) {
@@ -221,7 +222,7 @@ export const useBackupStore = defineStore('backup', {
         async fetchBackupConfig() {
             try {
                 const response = await apiClient.get('/backup/config/status');
-                console.log('⚙️ Backup Config Response:', response.data);
+                logger.debug('Backup Config Response:', response.data);
 
                 // Mapear campos do backend para formato esperado pelo frontend
                 if (response.data && response.data.config) {
@@ -233,9 +234,9 @@ export const useBackupStore = defineStore('backup', {
                     this.config = response.data;
                 }
 
-                console.log('✅ Config mapeado:', this.config);
+                logger.debug('Config mapeado:', this.config);
             } catch (error) {
-                console.error('❌ Erro ao buscar config de backup:', error.response?.data || error.message);
+                logger.error('Erro ao buscar config de backup:', error.response?.data || error.message);
                 this.config = null;
             }
         }

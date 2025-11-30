@@ -47,9 +47,15 @@ export const useAuthStore = defineStore('auth', {
         accessToken: sessionStorage.getItem('accessToken') || null,
         refreshToken: sessionStorage.getItem('refreshToken') || null,
         tokenExpiry: sessionStorage.getItem('tokenExpiry') || null,
-        user: JSON.parse(sessionStorage.getItem('user')) || null,
-        // LEGADO: Mantido para compatibilidade temporária
-        token: sessionStorage.getItem('token') || null,
+        user: (() => {
+            try {
+                const userData = sessionStorage.getItem('user');
+                return userData ? JSON.parse(userData) : null;
+            } catch (e) {
+                logger.error('Erro ao parsear dados do usuário do sessionStorage:', e);
+                return null;
+            }
+        })(),
     }),
 
     getters: {
@@ -89,15 +95,11 @@ export const useAuthStore = defineStore('auth', {
             this.refreshToken = refreshToken;
             this.user = decodedUser;
             this.tokenExpiry = expiry.toString();
-            // LEGADO
-            this.token = accessToken;
 
             sessionStorage.setItem('accessToken', accessToken);
             sessionStorage.setItem('refreshToken', refreshToken);
             sessionStorage.setItem('user', JSON.stringify(decodedUser));
             sessionStorage.setItem('tokenExpiry', expiry.toString());
-            // LEGADO
-            sessionStorage.setItem('token', accessToken);
         },
 
         async login(email, password) {
@@ -260,13 +262,11 @@ export const useAuthStore = defineStore('auth', {
             this.refreshToken = null;
             this.tokenExpiry = null;
             this.user = null;
-            this.token = null; // LEGADO
 
             sessionStorage.removeItem('accessToken');
             sessionStorage.removeItem('refreshToken');
             sessionStorage.removeItem('tokenExpiry');
             sessionStorage.removeItem('user');
-            sessionStorage.removeItem('token'); // LEGADO
 
             router.push('/login');
         },

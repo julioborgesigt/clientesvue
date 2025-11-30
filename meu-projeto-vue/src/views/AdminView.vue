@@ -270,6 +270,7 @@ import { useBackupStore } from '@/stores/backupStore';
 import { useAuthStore } from '@/stores/authStore';
 import apiClient from '@/api/axios';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { logger } from '@/utils/logger';
 
 const router = useRouter();
 const backupStore = useBackupStore();
@@ -328,10 +329,10 @@ async function refreshHealthStatus() {
   isLoadingHealth.value = true;
   try {
     const response = await apiClient.get('/health/detailed');
-    console.log('🏥 Health Status Response:', response.data);
+    logger.debug('Health Status Response:', response.data);
     healthStatus.value = response.data;
   } catch (error) {
-    console.error('❌ Erro ao buscar health status:', error.response?.data || error.message);
+    logger.error('Erro ao buscar health status:', error.response?.data || error.message);
     notificationStore.error('Erro ao buscar status do sistema.');
     healthStatus.value = null;
   } finally {
