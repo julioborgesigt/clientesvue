@@ -40,8 +40,10 @@
 
   <!-- Estado de Carregamento -->
   <v-overlay :model-value="clientStore.isDashboardLoading" class="align-center justify-center" persistent>
-    <v-progress-circular color="primary" indeterminate size="64"></v-progress-circular>
-    <div class="text-center mt-4">Carregando dados...</div>
+    <div class="text-center">
+      <v-progress-circular color="primary" indeterminate size="64"></v-progress-circular>
+      <div class="mt-4">Carregando dados...</div>
+    </div>
   </v-overlay>
 
   <!-- Conteúdo Principal -->
